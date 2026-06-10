@@ -31,7 +31,8 @@ export default function Header() {
   }, [open]);
 
   return (
-    <header
+    <>
+      <header
       className="sticky top-11 sm:top-14 z-40 transition-[background-color,backdrop-filter] duration-300"
       style={{
         // Keep a permanent 1px border so border-width never animates from 0 → 1.
@@ -130,15 +131,28 @@ export default function Header() {
           </svg>
         </button>
       </div>
+      </header>
 
-      {/* Mobile drawer — sits below banner (h-11 = 44px) + header (h-16 = 64px) = 108px */}
+      {/* Mobile drawer — rendered as a SIBLING of <header>, not a child.
+          Why: when the user scrolls and the header gets backdrop-filter:blur, the
+          header becomes a containing block for fixed descendants. The drawer's
+          `top:108 bottom:0` then resolves against the 64px-tall header → drawer
+          height collapses to 0 → bg invisible, nav text overflows and overlaps
+          the page. Keeping the drawer as a sibling means its `fixed` positioning
+          stays anchored to the viewport.
+          Slide-down via inline transform (always 100% opaque during transition).
+          `inert` when closed keeps Tab from reaching the hidden links. */}
       <div
-        className={`md:hidden fixed inset-x-0 top-[108px] bottom-0 z-30 transition-all duration-300 ${
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        className={`md:hidden fixed inset-x-0 top-[108px] bottom-0 z-30 transition-transform duration-300 ease-out ${
+          open ? "pointer-events-auto" : "pointer-events-none"
         }`}
+        style={{
+          transform: open ? "translateY(0)" : "translateY(-110vh)",
+        }}
         aria-hidden={!open}
+        inert={!open || undefined}
       >
-        <div className="absolute inset-0 bg-forest/95 backdrop-blur-md" onClick={() => setOpen(false)} />
+        <div className="absolute inset-0 bg-forest" onClick={() => setOpen(false)} />
         <nav
           className="relative h-full flex flex-col items-center justify-center gap-7 px-6 text-center"
           aria-label="Mobile"
@@ -173,6 +187,6 @@ export default function Header() {
           </div>
         </nav>
       </div>
-    </header>
+    </>
   );
 }
