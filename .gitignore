@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright (mcp) artifacts — keep outside Next's watcher
+/.playwright-mcp/
+*.png
+!/public/**/*.png
+
+# Claude Code session state — not project code
+/.claude/

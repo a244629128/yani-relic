@@ -1,26 +1,286 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Black Chancery — calligraphic display font, used on /font-demo for comparison */
+@font-face {
+  font-family: "Black Chancery";
+  src: url("/fonts/black-chancery.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.font-chancery {
+  font-family: "Black Chancery", "Cormorant Garamond", serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  /* Yani Relics palette — per art direction doc */
+  --color-forest: #0d1611;          /* main body background */
+  --color-forest-section: #18241b;  /* section / card base */
+  --color-forest-deep: #101714;     /* alternate deeper sections */
+  --color-moss: #263527;             /* moss accent */
+  --color-moss-dark: #122017;        /* deepest section */
+  --color-parchment: #d8c7aa;
+  --color-parchment-warm: #e6d8be;
+  --color-brass: #8b6f47;            /* antique gold */
+  --color-brass-light: #a98a5e;
+  --color-cream: #efe6d2;            /* primary text */
+  --color-cream-dim: #c8bea8;
+  --color-labradorite: #3f8f91;      /* labradorite glow */
+  --color-labradorite-light: #5aa6a6;/* glow highlight */
+  --color-labradorite-glow: #6fc6c8;
+  --color-ink: #100d0b;              /* dark brown black */
+  --color-shadow: #060a08;
+
+  --font-serif: var(--font-serif), "Cormorant Garamond", "Times New Roman", serif;
+  --font-sans: var(--font-sans), "Inter", "Helvetica Neue", sans-serif;
+
+  --shadow-relic: 0 10px 40px -10px rgba(0, 0, 0, 0.6), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 24px -4px rgba(90, 166, 166, 0.45), 0 0 60px -20px rgba(90, 166, 166, 0.3);
+
+  --animate-shimmer: shimmer 6s ease-in-out infinite;
+  --animate-float: float 8s ease-in-out infinite;
+  --animate-float-slow: float 14s ease-in-out infinite;
+  --animate-glow: glow 4s ease-in-out infinite;
+  --animate-sparkle: sparkle 3s ease-in-out infinite;
+  --animate-fade-up: fade-up 0.8s ease-out both;
+}
+
+@keyframes shimmer {
+  0%, 100% { transform: rotate(0deg); opacity: 0.7; }
+  50% { transform: rotate(180deg); opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(-12px) translateX(4px); }
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 18px -6px rgba(90, 166, 166, 0.35), 0 0 50px -24px rgba(90, 166, 166, 0.25); }
+  50% { box-shadow: 0 0 28px -4px rgba(90, 166, 166, 0.6), 0 0 80px -16px rgba(90, 166, 166, 0.45); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes drift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100vh); }
+}
+
+/* Cursor trail particle: rise + fade with a quick twinkle at start */
+@keyframes cursor-spark {
+  0%   { opacity: 0;   transform: scale(0.4); }
+  20%  { opacity: 1;   transform: scale(1.1); }
+  60%  { opacity: 0.8; transform: scale(0.95); }
+  100% { opacity: 0;   transform: scale(0.5) translateY(-6px); }
+}
+
+/* Witch silhouette: subtle breathing sway */
+@keyframes breath {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50%      { transform: scale(1.008) translateY(-3px); }
+}
+
+/* Mist drifting inside the crystal orb */
+@keyframes mist-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.85; }
+  50%      { transform: translate(8px, -6px) scale(1.06); opacity: 1; }
+}
+
+/* Smoke wisps rising and dispersing */
+@keyframes wisp {
+  0%   { opacity: 0;    transform: translateY(0)    scale(0.6); }
+  20%  { opacity: 0.85; transform: translateY(-30px) scale(1); }
+  100% { opacity: 0;    transform: translateY(-160px) scale(1.6); }
+}
+
+/* Candle flame flicker */
+@keyframes flicker {
+  0%, 100% { transform: scale(1) translateY(0); opacity: 0.95; }
+  35%      { transform: scale(0.95, 1.05) translateY(-1px); opacity: 1; }
+  65%      { transform: scale(1.05, 0.97) translateY(0.5px); opacity: 0.88; }
+}
+
+/* Energy thread from fingertip into orb */
+@keyframes wisp-flow {
+  0%, 100% { opacity: 0; stroke-dasharray: 0 80; stroke-dashoffset: 0; }
+  20%      { opacity: 0.9; }
+  60%      { opacity: 0.6; stroke-dasharray: 40 40; stroke-dashoffset: -10; }
+  100%     { opacity: 0; stroke-dasharray: 80 0; stroke-dashoffset: -80; }
+}
+
+html, body {
+  background-color: var(--color-forest);
+  color: var(--color-cream);
+}
+
+/* Deep forest atmosphere + vignette so the green never feels flat.
+   z-index: -1 keeps it behind normal flow without needing to elevate every body child. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse at top, rgba(63, 143, 145, 0.07), transparent 55%),
+    radial-gradient(ellipse at bottom, rgba(6, 12, 8, 0.85), transparent 60%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 3px);
+}
+
+/* Ensure body forms a stacking context so ::before's z:-1 stays under content. */
+body { isolation: isolate; }
+
+/* Parchment card surface */
+.parchment {
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255, 244, 220, 0.05), transparent 60%),
+    linear-gradient(160deg, #e6d8be 0%, #d8c7aa 60%, #c2ad88 100%);
+  color: var(--color-ink);
+  border: 1px solid rgba(139, 111, 71, 0.35);
+  box-shadow:
+    inset 0 0 30px rgba(139, 111, 71, 0.12),
+    0 8px 28px -10px rgba(0, 0, 0, 0.55);
+}
+
+.parchment-soft {
+  background:
+    linear-gradient(160deg, rgba(216, 199, 170, 0.96), rgba(216, 199, 170, 0.82));
+  color: var(--color-ink);
+}
+
+/* Labradorite shimmer accent */
+.labradorite-surface {
+  background:
+    conic-gradient(from 140deg at 30% 30%,
+      #1a3536 0deg,
+      #3f8f91 90deg,
+      #5aa6a6 160deg,
+      #2a4a5a 220deg,
+      #1a3536 360deg);
+}
+
+.labradorite-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.labradorite-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: -50%;
+  background:
+    conic-gradient(from 0deg,
+      rgba(90, 166, 166, 0) 0deg,
+      rgba(90, 166, 166, 0.35) 60deg,
+      rgba(111, 198, 200, 0.55) 90deg,
+      rgba(90, 166, 166, 0.35) 120deg,
+      rgba(90, 166, 166, 0) 180deg,
+      rgba(90, 166, 166, 0) 360deg);
+  animation: var(--animate-shimmer);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.hairline {
+  background: linear-gradient(90deg, transparent, rgba(216, 199, 170, 0.28), transparent);
+  height: 1px;
+}
+
+/* Hide scrollbar on horizontal-swipe containers (used by mobile flip deck) */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* === Design-system primitives (AD doc) === */
+
+/* Primary button — parchment-outlined with backdrop blur */
+.btn-relic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(24, 36, 27, 0.45);
+  border: 1px solid rgba(216, 199, 170, 0.35);
+  color: #d8c7aa;
+  border-radius: 14px;
+  padding: 14px 28px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: all 0.35s ease;
+  cursor: pointer;
+}
+.btn-relic:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(63, 143, 145, 0.25);
+  border-color: rgba(216, 199, 170, 0.55);
+}
+
+/* Text-only secondary link — used under primary CTA */
+.btn-relic-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  color: #c8bea8;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-color: rgba(216, 199, 170, 0.28);
+  text-underline-offset: 6px;
+  transition: color 0.3s ease, text-decoration-color 0.3s ease;
+}
+.btn-relic-link:hover {
+  color: #5aa6a6;
+  text-decoration-color: #5aa6a6;
+}
+
+/* Product card surface — frosted moss with parchment hairline */
+.card-relic {
+  background-color: rgba(24, 36, 27, 0.72);
+  border: 1px solid rgba(216, 199, 170, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.45s ease;
+  overflow: hidden;
+}
+.card-relic:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 0 30px rgba(63, 143, 145, 0.18), 0 14px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(216, 199, 170, 0.18);
+}
+
+/* Decorative thin hairline used in dividers */
+.hairline-parchment {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(216, 199, 170, 0.28), transparent);
+}
+
+.h-display {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+}
+
+html { scroll-behavior: smooth; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }

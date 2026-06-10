@@ -1,65 +1,82 @@
-import Image from "next/image";
+import Link from "next/link";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import FeatureCardsRow from "@/components/FeatureCardsRow";
+import RelicFlipDeck from "@/components/RelicFlipDeck";
+import Sparkles from "@/components/decor/Sparkles";
+import MoonPhaseDivider from "@/components/decor/MoonPhaseDivider";
+import { links } from "@/data/products";
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <>
+      <Header />
+      <main className="flex-1 relative">
+        {/* === HERO — title above, flip deck centered, buttons below === */}
+        <section className="relative overflow-hidden">
+          <div
+            className="absolute inset-0 -z-10"
+            style={{
+              background:
+                "radial-gradient(circle at 50% 55%, rgba(63, 143, 145, 0.18), transparent 38%)," +
+                "radial-gradient(circle at 50% 10%, rgba(216, 199, 170, 0.04), transparent 30%)," +
+                "linear-gradient(180deg, #0d1611 0%, #101714 60%, #0d1611 100%)",
+            }}
+            aria-hidden
+          />
+          <Sparkles count={28} intensity="magical" />
+
+          <div className="relative mx-auto max-w-5xl px-5 sm:px-8 pt-12 pb-14 md:pt-16 md:pb-20 flex flex-col items-center text-center">
+            <h1
+              className="font-chancery text-parchment"
+              style={{
+                fontSize: "clamp(64px, 10vw, 132px)",
+                fontWeight: 400,
+                letterSpacing: "0.02em",
+                lineHeight: 1,
+              }}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              <span className="block">Yani</span>
+              <span className="block">Relics</span>
+            </h1>
+
+            <MoonPhaseDivider className="my-6 sm:my-8 max-w-[220px]" />
+
+            <p
+              className="font-serif text-cream/85 max-w-md mb-10 sm:mb-14"
+              style={{ fontSize: "clamp(15px, 1.3vw, 18px)", lineHeight: 1.5 }}
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+              Handmade labradorite relics
+              <br /> for soft witches and moonlit souls.
+            </p>
+
+            {/* Flip deck takes the orb's old spot */}
+            <div className="w-full mb-10 sm:mb-14">
+              <RelicFlipDeck accent="gold" />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-center">
+              <Link href="/shop" className="btn-relic">
+                View Relics
+              </Link>
+              <a
+                href={links.depop}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-relic-link"
+              >
+                Shop on Depop →
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* === FEATURE CARDS === */}
+        <section className="relative mx-auto max-w-7xl px-5 sm:px-8 py-12 md:py-20">
+          <FeatureCardsRow variant="tall" />
+        </section>
       </main>
-    </div>
+      <Footer />
+    </>
   );
 }
