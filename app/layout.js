@@ -2,6 +2,7 @@ import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import SiteBanner from "@/components/SiteBanner";
 import MobileActionBar from "@/components/MobileActionBar";
+import BackToTop from "@/components/BackToTop";
 import CursorSparkleTrail from "@/components/decor/CursorSparkleTrail";
 
 const serif = Cormorant_Garamond({
@@ -45,6 +46,7 @@ export default function RootLayout({ children }) {
         <SiteBanner />
         {children}
         <MobileActionBar />
+        <BackToTop />
         <CursorSparkleTrail />
       </body>
     </html>
