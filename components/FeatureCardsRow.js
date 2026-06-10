@@ -40,10 +40,18 @@ export default function FeatureCardsRow({ gap = "gap-4 sm:gap-5", variant = "tal
   ];
 
   return (
-    <div className={`grid grid-cols-2 lg:grid-cols-4 ${gap}`}>
-      {cards.map((c, i) => (
-        <FeatureCard key={i} card={c} aspect={aspect} />
-      ))}
+    /* Mobile: horizontal swipe-strip with snap. Desktop (lg+): 4-col grid. */
+    <div className="overflow-x-auto lg:overflow-visible -mx-3 sm:mx-0 pb-3 lg:pb-0 snap-x snap-mandatory lg:snap-none no-scrollbar">
+      <div className={`flex lg:grid lg:grid-cols-4 ${gap} px-3 lg:px-0`}>
+        {cards.map((c, i) => (
+          <div
+            key={i}
+            className="flex-shrink-0 w-[60vw] max-w-[240px] lg:w-auto lg:max-w-none snap-center"
+          >
+            <FeatureCard card={c} aspect={aspect} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
