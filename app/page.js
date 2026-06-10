@@ -11,8 +11,8 @@ export default function Home() {
   return (
     <>
       <Header />
-      <main className="flex-1 relative">
-        {/* === HERO — title above, flip deck centered, buttons below === */}
+      <main className="flex-1 relative pb-24 md:pb-0">
+        {/* === HERO === Tightened on mobile to fit title + tagline + CTA in one dvh. */}
         <section className="relative overflow-hidden">
           <div
             className="absolute inset-0 -z-10"
@@ -26,11 +26,11 @@ export default function Home() {
           />
           <Sparkles count={28} intensity="magical" />
 
-          <div className="relative mx-auto max-w-5xl px-5 sm:px-8 pt-12 pb-14 md:pt-16 md:pb-20 flex flex-col items-center text-center">
+          <div className="relative mx-auto max-w-5xl px-5 sm:px-8 pt-6 pb-10 md:pt-16 md:pb-20 flex flex-col items-center text-center min-h-[calc(100dvh-108px)] md:min-h-0 justify-center">
             <h1
               className="font-chancery text-parchment"
               style={{
-                fontSize: "clamp(64px, 10vw, 132px)",
+                fontSize: "clamp(54px, 12vw, 132px)",
                 fontWeight: 400,
                 letterSpacing: "0.02em",
                 lineHeight: 1,
@@ -40,20 +40,15 @@ export default function Home() {
               <span className="block">Relics</span>
             </h1>
 
-            <MoonPhaseDivider className="my-6 sm:my-8 max-w-[220px]" />
+            <MoonPhaseDivider className="my-5 sm:my-8 max-w-[200px]" />
 
             <p
-              className="font-serif text-cream/85 max-w-md mb-10 sm:mb-14"
-              style={{ fontSize: "clamp(15px, 1.3vw, 18px)", lineHeight: 1.5 }}
+              className="font-serif text-cream/85 max-w-md mb-7 sm:mb-10"
+              style={{ fontSize: "clamp(15px, 1.3vw, 18px)", lineHeight: 1.45 }}
             >
               Handmade labradorite relics
               <br /> for soft witches and moonlit souls.
             </p>
-
-            {/* Flip deck takes the orb's old spot */}
-            <div className="w-full mb-10 sm:mb-14">
-              <RelicFlipDeck accent="gold" />
-            </div>
 
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-center">
               <Link href="/shop" className="btn-relic">
@@ -71,8 +66,13 @@ export default function Home() {
           </div>
         </section>
 
+        {/* === FLIP DECK === Moved out of hero, becomes its own section. */}
+        <section className="relative mx-auto max-w-5xl px-5 sm:px-8 py-10 md:py-20">
+          <RelicFlipDeck accent="gold" />
+        </section>
+
         {/* === FEATURE CARDS === */}
-        <section className="relative mx-auto max-w-7xl px-5 sm:px-8 py-12 md:py-20">
+        <section className="relative mx-auto max-w-7xl px-5 sm:px-8 py-10 md:py-20">
           <FeatureCardsRow variant="tall" />
         </section>
       </main>
