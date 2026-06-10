@@ -3,6 +3,7 @@
 import Image from "next/image";
 import WaxSeal from "@/components/decor/WaxSeal";
 import HoverSparkleField from "@/components/decor/HoverSparkleField";
+import { BLUR_DATA_URL } from "@/data/products";
 
 // Universal card. `variant` switches between visual treatments.
 //   variant: "grid" | "masonry" | "editorial" | "archive"
@@ -45,6 +46,8 @@ export default function ProductCard({ product, variant = "grid", animation = "su
             fill
             className="object-cover sepia-[0.15] group-hover/img:scale-105 transition-transform duration-700"
             sizes="120px"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
           />
         </button>
         <div className="flex-1 min-w-0">
@@ -94,6 +97,8 @@ export default function ProductCard({ product, variant = "grid", animation = "su
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-700"
             sizes="(min-width: 768px) 50vw, 100vw"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
           />
           <div className="absolute top-4 right-4">
             <WaxSeal label={product.sold ? "Found Home" : "One of One"} />
@@ -145,6 +150,8 @@ export default function ProductCard({ product, variant = "grid", animation = "su
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-700"
               sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
             />
           </div>
         ) : (
@@ -154,6 +161,8 @@ export default function ProductCard({ product, variant = "grid", animation = "su
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-700"
             sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
           />
         )}
 

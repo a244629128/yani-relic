@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import { products, links } from "@/data/products";
+import { products, links, BLUR_DATA_URL } from "@/data/products";
 
 const DECK_SIZE = 5;
 const FLIP_MS = 1100;
@@ -489,6 +489,8 @@ function FrontCard({ relic }) {
           fill
           className="object-cover"
           sizes="280px"
+          placeholder="blur"
+          blurDataURL={BLUR_DATA_URL}
         />
         <div
           className="absolute inset-0"

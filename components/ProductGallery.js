@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import { BLUR_DATA_URL } from "@/data/products";
 
 /**
  * Product image + video gallery.
@@ -189,6 +190,8 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
                   className="object-cover"
                   sizes="(min-width: 768px) 50vw, 100vw"
                   priority={i === 0}
+                  placeholder="blur"
+                  blurDataURL={BLUR_DATA_URL}
                 />
               )}
             </div>
@@ -254,6 +257,8 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
                 fill
                 className="object-cover"
                 sizes="80px"
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
               />
               {item.type === "video" && (
                 <span
