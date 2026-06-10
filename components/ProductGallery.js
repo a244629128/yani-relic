@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { BLUR_DATA_URL } from "@/data/products";
+import FullscreenViewer from "@/components/FullscreenViewer";
 
 /**
  * Product image + video gallery.
@@ -34,9 +35,11 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
   // === Zoom state (touch devices) ===
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [fullscreenIdx, setFullscreenIdx] = useState(null);
   const lastTap = useRef(0);
   const pinchStart = useRef(null);
   const lastPan = useRef({ x: 0, y: 0 });
+  const singleTapTimer = useRef(null);
 
   useEffect(() => {
     if (active >= items.length) setActive(0);
@@ -54,13 +57,35 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  const handleDoubleTap = () => {
+  // Handle single tap (open fullscreen on mobile) vs double tap (inline zoom).
+  // Single-tap fires after 280ms unless a second tap arrives within 300ms.
+  const handleTap = () => {
     const now = Date.now();
     if (now - lastTap.current < 300) {
+      // Double-tap → cancel pending single-tap, do inline zoom toggle
+      if (singleTapTimer.current) {
+        window.clearTimeout(singleTapTimer.current);
+        singleTapTimer.current = null;
+      }
       setZoom((z) => (z === 1 ? 2 : 1));
       setPan({ x: 0, y: 0 });
+      lastTap.current = 0;
+      return;
     }
     lastTap.current = now;
+
+    // Only fire single-tap → fullscreen on mobile-sized viewports.
+    if (typeof window === "undefined") return;
+    const isMobile = window.matchMedia("(max-width: 767px)").matches;
+    if (!isMobile) return;
+
+    // If user is currently pinch-zoomed in the inline gallery, don't open fullscreen.
+    if (zoom > 1) return;
+
+    singleTapTimer.current = window.setTimeout(() => {
+      singleTapTimer.current = null;
+      setFullscreenIdx(active);
+    }, 280);
   };
 
   const onZoomTouchStart = (e) => {
@@ -154,7 +179,7 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
           onZoomTouchEnd();
           if (zoom === 1) onTouchEnd();
         }}
-        onClick={handleDoubleTap}
+        onClick={handleTap}
       >
         {items.map((item, i) => (
           <div
@@ -273,6 +298,16 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
             </button>
           ))}
         </div>
+      )}
+
+      {/* Fullscreen lightbox — opens on single tap (mobile only) */}
+      {fullscreenIdx !== null && (
+        <FullscreenViewer
+          media={items}
+          startIndex={fullscreenIdx}
+          alt={alt}
+          onClose={() => setFullscreenIdx(null)}
+        />
       )}
     </div>
   );
