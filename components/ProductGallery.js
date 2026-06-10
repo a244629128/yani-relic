@@ -30,9 +30,73 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
   const startX = useRef(null);
   const deltaX = useRef(0);
 
+  // === Zoom state (touch devices) ===
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const lastTap = useRef(0);
+  const pinchStart = useRef(null);
+  const lastPan = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
     if (active >= items.length) setActive(0);
   }, [items.length, active]);
+
+  // Reset zoom when slide changes
+  useEffect(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, [active]);
+
+  const getTouchDistance = (touches) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    if (now - lastTap.current < 300) {
+      setZoom((z) => (z === 1 ? 2 : 1));
+      setPan({ x: 0, y: 0 });
+    }
+    lastTap.current = now;
+  };
+
+  const onZoomTouchStart = (e) => {
+    if (e.touches.length === 2) {
+      pinchStart.current = {
+        distance: getTouchDistance(e.touches),
+        zoom,
+      };
+    } else if (e.touches.length === 1 && zoom > 1) {
+      lastPan.current = {
+        x: e.touches[0].clientX - pan.x,
+        y: e.touches[0].clientY - pan.y,
+      };
+    }
+  };
+
+  const onZoomTouchMove = (e) => {
+    if (e.touches.length === 2 && pinchStart.current) {
+      const newDist = getTouchDistance(e.touches);
+      const ratio = newDist / pinchStart.current.distance;
+      const newZoom = Math.max(1, Math.min(3, pinchStart.current.zoom * ratio));
+      setZoom(newZoom);
+    } else if (e.touches.length === 1 && zoom > 1) {
+      setPan({
+        x: e.touches[0].clientX - lastPan.current.x,
+        y: e.touches[0].clientY - lastPan.current.y,
+      });
+    }
+  };
+
+  const onZoomTouchEnd = () => {
+    pinchStart.current = null;
+    if (zoom < 1.1) {
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+    }
+  };
 
   const goPrev = () => setActive((i) => (i - 1 + items.length) % items.length);
   const goNext = () => setActive((i) => (i + 1) % items.length);
@@ -77,9 +141,19 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
       {/* === MAIN MEDIA === */}
       <div
         className="relative aspect-square overflow-hidden bg-ink/40 select-none"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
+        onTouchStart={(e) => {
+          onZoomTouchStart(e);
+          if (zoom === 1 && e.touches.length === 1) onTouchStart(e);
+        }}
+        onTouchMove={(e) => {
+          onZoomTouchMove(e);
+          if (zoom === 1 && e.touches.length === 1) onTouchMove(e);
+        }}
+        onTouchEnd={() => {
+          onZoomTouchEnd();
+          if (zoom === 1) onTouchEnd();
+        }}
+        onClick={handleDoubleTap}
       >
         {items.map((item, i) => (
           <div
@@ -89,22 +163,35 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
             }`}
             aria-hidden={i !== active}
           >
-            {item.type === "video" ? (
-              <VideoPlayer
-                src={item.src}
-                poster={item.poster}
-                isActive={i === active}
-              />
-            ) : (
-              <Image
-                src={item.src}
-                alt={i === active ? alt : ""}
-                fill
-                className="object-cover"
-                sizes="(min-width: 768px) 50vw, 100vw"
-                priority={i === 0}
-              />
-            )}
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                transform:
+                  i === active && (zoom !== 1 || pan.x !== 0 || pan.y !== 0)
+                    ? `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`
+                    : undefined,
+                transformOrigin: "center",
+                transition: pinchStart.current ? "none" : "transform 200ms ease-out",
+              }}
+            >
+              {item.type === "video" ? (
+                <VideoPlayer
+                  src={item.src}
+                  poster={item.poster}
+                  isActive={i === active}
+                />
+              ) : (
+                <Image
+                  src={item.src}
+                  alt={i === active ? alt : ""}
+                  fill
+                  className="object-cover"
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  priority={i === 0}
+                />
+              )}
+            </div>
           </div>
         ))}
 
