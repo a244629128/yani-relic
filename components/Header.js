@@ -154,7 +154,7 @@ export default function Header() {
       >
         <div className="absolute inset-0 bg-forest" onClick={() => setOpen(false)} />
         <nav
-          className="relative h-full flex flex-col items-center justify-center gap-6 px-6 text-center pt-safe pb-safe"
+          className="relative h-full flex flex-col items-center justify-start gap-5 px-6 pt-10 pb-safe text-center"
           aria-label="Mobile"
         >
           {nav.map((item, i) => (
