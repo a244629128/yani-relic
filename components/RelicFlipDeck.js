@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { products, links, BLUR_DATA_URL } from "@/data/products";
 
-const DECK_SIZE = 5;
+const DESKTOP_DECK_SIZE = 5;
+const MOBILE_DECK_SIZE = 3;
 const FLIP_MS = 1100;
 
 // Each card slot has a fixed ornament symbol on its back. Stable across shuffles
@@ -28,12 +29,12 @@ export default function RelicFlipDeck({
   subtitle = "Choose a card and see which relic is calling to you.",
   accent = "gold",
 }) {
+  // Render desktop-sized deck on SSR; useEffect below trims to 3 on mobile after mount.
   const [cards, setCards] = useState(() =>
-    Array.from({ length: DECK_SIZE }, () => ({ product: null, isFlipped: false }))
+    Array.from({ length: DESKTOP_DECK_SIZE }, () => ({ product: null, isFlipped: false }))
   );
   const [hasMounted, setHasMounted] = useState(false);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const scrollRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const pickRandom = useCallback((excludeIds = []) => {
     const pool = products.filter((p) => !excludeIds.includes(p.id));
@@ -41,55 +42,30 @@ export default function RelicFlipDeck({
     return fromPool[Math.floor(Math.random() * fromPool.length)];
   }, []);
 
+  // Detect mobile via matchMedia; on change, trim/expand the deck.
   useEffect(() => {
-    setCards((prev) => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 639px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const deckSize = isMobile ? MOBILE_DECK_SIZE : DESKTOP_DECK_SIZE;
+
+  // On mount + on deckSize change, populate (or resize) cards with random products.
+  useEffect(() => {
+    setCards(() => {
       const used = [];
-      return prev.map(() => {
+      return Array.from({ length: deckSize }).map(() => {
         const product = pickRandom(used);
         used.push(product.id);
         return { product, isFlipped: false };
       });
     });
     setHasMounted(true);
-  }, [pickRandom]);
-
-  // Track which card is centered in the mobile carousel
-  const handleScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const containerCenter = el.scrollLeft + el.clientWidth / 2;
-    const slots = el.querySelectorAll("[data-card-slot]");
-    let closest = 0;
-    let minDist = Infinity;
-    slots.forEach((slot, idx) => {
-      const center = slot.offsetLeft + slot.offsetWidth / 2;
-      const dist = Math.abs(center - containerCenter);
-      if (dist < minDist) {
-        minDist = dist;
-        closest = idx;
-      }
-    });
-    setActiveIdx(closest);
-  }, []);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
-
-  const scrollToCard = (i) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const slot = el.querySelectorAll("[data-card-slot]")[i];
-    if (!slot) return;
-    el.scrollTo({
-      left: slot.offsetLeft - (el.clientWidth - slot.offsetWidth) / 2,
-      behavior: "smooth",
-    });
-  };
+  }, [pickRandom, deckSize]);
 
   const handleFlip = (i) => {
     setCards((prev) => {
@@ -146,41 +122,20 @@ export default function RelicFlipDeck({
         </div>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="overflow-x-auto sm:overflow-visible -mx-3 sm:mx-0 pb-3 sm:pb-0 snap-x snap-mandatory sm:snap-none no-scrollbar"
-      >
-        <div className="flex sm:grid sm:grid-cols-5 gap-3 sm:gap-5 px-[15vw] sm:px-4 max-w-5xl sm:mx-auto">
-          {cards.map((card, i) => (
-            <div
-              key={i}
-              data-card-slot
-              className="flex-shrink-0 w-[70vw] max-w-[260px] sm:w-auto sm:max-w-none snap-center"
-            >
-              <FlipCard
-                card={card}
-                symbol={SYMBOLS[i]}
-                onFlip={() => handleFlip(i)}
-                borderColor={borderColor}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Mobile dot indicators */}
-      <div className="flex sm:hidden justify-center gap-2 mt-5">
-        {cards.map((_, i) => (
-          <button
+      {/* Mobile: 3 cards in a tight row, no scroll. Desktop: 5-col grid. */}
+      <div className="flex sm:grid sm:grid-cols-5 gap-2 sm:gap-5 px-2 sm:px-4 max-w-5xl mx-auto justify-center">
+        {cards.map((card, i) => (
+          <div
             key={i}
-            onClick={() => scrollToCard(i)}
-            aria-label={`Show card ${i + 1}`}
-            className={`h-1.5 rounded-full transition-all ${
-              activeIdx === i
-                ? "w-5 bg-labradorite-light"
-                : "w-1.5 bg-parchment/40"
-            }`}
-          />
+            className="flex-1 max-w-[120px] sm:max-w-none sm:w-auto"
+          >
+            <FlipCard
+              card={card}
+              symbol={SYMBOLS[i]}
+              onFlip={() => handleFlip(i)}
+              borderColor={borderColor}
+            />
+          </div>
         ))}
       </div>
 
