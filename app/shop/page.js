@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -8,18 +9,37 @@ import ProductDetail from "@/components/ProductDetail";
 import MoonPhaseDivider from "@/components/decor/MoonPhaseDivider";
 import { products } from "@/data/products";
 
-export default function ShopPage() {
+function ShopPageInner() {
   const [open, setOpen] = useState(null);
   const [filter, setFilter] = useState("all");
+  const filterScrollY = useRef(0);
+  const searchParams = useSearchParams();
 
   const available = products.filter((p) => !p.sold);
   const sold = products.filter((p) => p.sold);
   const list = filter === "available" ? available : filter === "sold" ? sold : products;
 
+  // ?relic=r-XX → auto-open that relic's modal (from a shared link)
+  useEffect(() => {
+    const relicId = searchParams.get("relic");
+    if (!relicId) return;
+    const found = products.find((p) => p.id === relicId);
+    if (found) setOpen(found);
+  }, [searchParams]);
+
+  const onFilterChange = (key) => {
+    filterScrollY.current = window.scrollY;
+    setFilter(key);
+  };
+
+  useEffect(() => {
+    window.scrollTo(0, filterScrollY.current);
+  }, [filter]);
+
   return (
     <>
       <Header />
-      <main className="flex-1">
+      <main className="flex-1 pb-24 md:pb-0">
         <section className="mx-auto max-w-6xl px-5 sm:px-8 pt-12 pb-6 md:pt-20">
           <p className="text-xs uppercase tracking-[0.22em] text-brass-light text-center mb-3">
             Relics
@@ -43,7 +63,7 @@ export default function ShopPage() {
               return (
                 <button
                   key={f.key}
-                  onClick={() => setFilter(f.key)}
+                  onClick={() => onFilterChange(f.key)}
                   className={`text-xs uppercase tracking-[0.18em] px-4 py-2 rounded-full border transition-colors ${
                     active
                       ? "bg-labradorite text-cream border-labradorite"
@@ -80,5 +100,14 @@ export default function ShopPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+export default function ShopPage() {
+  // useSearchParams must be wrapped in Suspense in Next 15
+  return (
+    <Suspense fallback={null}>
+      <ShopPageInner />
+    </Suspense>
   );
 }
