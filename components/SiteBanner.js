@@ -1,13 +1,32 @@
-// Site-wide promo banner — sticky at the very top of every page.
-// Banner height is h-11 sm:h-14 (44px / 56px). If you change those, also
-// update the Header's `top-11 sm:top-14` sticky offset to match.
-// Edit the labels / emphasized fragments to change the announcement.
-const LABEL_1 = "Free shipping on orders";
-const EMPHASIS_1 = "$45+";
-const LABEL_2 = "Ships within";
-const EMPHASIS_2 = "24 hours";
+"use client";
+
+import { useEffect, useState } from "react";
+
+// Two short single-line messages that crossfade every 4s. Both messages
+// occupy the same fixed-height slot to prevent CLS. Pauses on
+// pointer/touch. Respects prefers-reduced-motion (no auto-rotate; first
+// message stays visible).
+const MESSAGES = [
+  { label: "Free shipping on orders", emphasis: "$45+" },
+  { label: "Ships within", emphasis: "24 hours" },
+];
+
+const ROTATE_MS = 4000;
 
 export default function SiteBanner() {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce || paused || MESSAGES.length < 2) return;
+    const t = window.setInterval(() => {
+      setIndex((i) => (i + 1) % MESSAGES.length);
+    }, ROTATE_MS);
+    return () => window.clearInterval(t);
+  }, [paused]);
+
   return (
     <div
       className="sticky top-0 z-[45] w-full h-11 sm:h-14"
@@ -16,43 +35,46 @@ export default function SiteBanner() {
           "linear-gradient(180deg, #101714 0%, #0d1611 100%)",
         borderBottom: "1px solid rgba(216, 199, 170, 0.12)",
       }}
+      onPointerEnter={() => setPaused(true)}
+      onPointerLeave={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setPaused(false)}
     >
-      <div className="mx-auto max-w-7xl px-3 sm:px-4 h-full flex items-center justify-center gap-2 sm:gap-4">
+      <div className="mx-auto max-w-7xl px-3 sm:px-4 h-full flex items-center justify-center gap-3 sm:gap-4">
         <SparkleMark />
-        <p
-          className="text-parchment uppercase font-serif flex items-baseline flex-wrap justify-center gap-x-1.5 sm:gap-x-2 gap-y-0"
-          style={{
-            fontSize: "clamp(11px, 0.95vw, 15px)",
-            letterSpacing: "0.18em",
-            fontWeight: 500,
-          }}
-        >
-          <span>{LABEL_1}</span>
-          <Emphasis>{EMPHASIS_1}</Emphasis>
-          <span style={{ color: "rgba(216, 199, 170, 0.5)", padding: "0 4px" }}>·</span>
-          <span>{LABEL_2}</span>
-          <Emphasis>{EMPHASIS_2}</Emphasis>
-        </p>
+        <div className="relative h-full flex items-center" style={{ minWidth: 0 }}>
+          {MESSAGES.map((m, i) => (
+            <p
+              key={i}
+              className="absolute inset-0 flex items-center justify-center gap-2 sm:gap-2.5 text-parchment uppercase font-serif transition-opacity duration-500"
+              style={{
+                fontSize: "clamp(11px, 0.95vw, 15px)",
+                letterSpacing: "0.18em",
+                fontWeight: 500,
+                whiteSpace: "nowrap",
+                opacity: i === index ? 1 : 0,
+              }}
+              aria-hidden={i !== index}
+            >
+              <span>{m.label}</span>
+              <span
+                className="font-chancery"
+                style={{
+                  color: "#b59a68",
+                  fontSize: "clamp(22px, 2vw, 30px)",
+                  letterSpacing: "0",
+                  textTransform: "none",
+                  lineHeight: 1,
+                }}
+              >
+                {m.emphasis}
+              </span>
+            </p>
+          ))}
+        </div>
         <SparkleMark />
       </div>
     </div>
-  );
-}
-
-function Emphasis({ children }) {
-  return (
-    <span
-      className="font-chancery"
-      style={{
-        color: "#b59a68", // brass-light — antique gold
-        fontSize: "clamp(22px, 2vw, 30px)",
-        letterSpacing: "0",
-        textTransform: "none",
-        lineHeight: 1,
-      }}
-    >
-      {children}
-    </span>
   );
 }
 
