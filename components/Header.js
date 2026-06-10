@@ -154,18 +154,26 @@ export default function Header() {
       >
         <div className="absolute inset-0 bg-forest" onClick={() => setOpen(false)} />
         <nav
-          className="relative h-full flex flex-col items-center justify-center gap-7 px-6 text-center"
+          className="relative h-full flex flex-col items-center justify-center gap-6 px-6 text-center pt-safe pb-safe"
           aria-label="Mobile"
         >
-          {nav.map((item) => (
-            <Link
+          {nav.map((item, i) => (
+            <span
               key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className="font-serif text-3xl text-parchment hover:text-labradorite-light transition-colors uppercase tracking-[0.12em]"
+              style={{
+                opacity: open ? 1 : 0,
+                transform: open ? "translateY(0)" : "translateY(8px)",
+                transition: `opacity 350ms ease-out ${50 + i * 40}ms, transform 350ms ease-out ${50 + i * 40}ms`,
+              }}
             >
-              {item.label}
-            </Link>
+              <Link
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className="font-serif text-3xl text-parchment hover:text-labradorite-light transition-colors uppercase tracking-[0.12em] min-h-[48px] flex items-center"
+              >
+                {item.label}
+              </Link>
+            </span>
           ))}
           <div className="mt-4 flex flex-col gap-3 w-full max-w-xs">
             <a
