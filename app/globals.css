@@ -76,6 +76,12 @@
   to { transform: translateY(-100vh); }
 }
 
+@keyframes modal-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.animate-modal-up { animation: modal-up 280ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+
 /* Cursor trail particle: rise + fade with a quick twinkle at start */
 @keyframes cursor-spark {
   0%   { opacity: 0;   transform: scale(0.4); }
