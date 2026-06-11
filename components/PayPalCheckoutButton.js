@@ -10,22 +10,6 @@ import {
 } from "@/lib/paypal-actions";
 import { getSessionId } from "@/lib/analytics";
 
-// Server error messages that mean "this product is gone now". When we
-// see one, refresh the page so the buyer's stale view updates to show
-// the 'Found Home' parchment instead of the buy button.
-const SOLD_OUT_PHRASES = [
-  "found her person",
-  "claimed by another buyer",
-  "already been paid",
-  "already been claimed",
-];
-
-function isSoldOutError(msg) {
-  if (!msg) return false;
-  const lower = String(msg).toLowerCase();
-  return SOLD_OUT_PHRASES.some((p) => lower.includes(p));
-}
-
 /**
  * PayPal Smart Button. Renders a PayPal-branded checkout button that
  * opens a PayPal popup. On approve, captures server-side and shows a
@@ -119,10 +103,11 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
             if (!res.ok) {
               setStatus("error");
               setError(res.error || "Could not start checkout");
-              // If the product was sold while this page was stale, refresh
-              // so the UI updates to 'Found Home' parchment + hides the
-              // buy button. Buyer sees the error briefly first.
-              if (isSoldOutError(res.error)) {
+              // Structured flag (Codex MED) — server tells us explicitly
+              // whether the rejection means "this piece is gone now". Refresh
+              // the page so the UI updates to 'Found Home' parchment + hides
+              // the buy button. Buyer sees the error briefly first.
+              if (res.soldOut) {
                 setTimeout(() => router.refresh(), 1800);
               }
               throw new Error(res.error || "createOrder failed");

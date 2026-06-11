@@ -201,7 +201,9 @@ export async function POST(req) {
       .from("paypal_orders")
       .update(oversoldUpdates)
       .eq("id", orderId)
-      .neq("status", "refunded"); // never overwrite a final refunded state
+      // Codex MED: narrow the guard. .neq('refunded') would clobber a
+      // 'voided' or 'failed' row to 'oversold'. Only flip in-flight rows.
+      .in("status", ["created", "approved"]);
     if (oversoldErr) {
       console.error(
         "[paypal-webhook] CRITICAL: failed to mark oversold:",
