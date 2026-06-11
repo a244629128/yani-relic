@@ -10,11 +10,8 @@ import { trackDepopClick } from "@/lib/analytics";
  * Body of the /shop/[id] page. The page itself is a server component;
  * this client component holds the interactive bits (PayPal button,
  * tracked CTAs). Layout: split gallery left, info right on desktop;
- * stacked on mobile.
- *
- * Depop CTA intentionally absent — Phase 2D moved it off the product
- * page entirely (per user). Header / footer / site-wide Depop links
- * still expose Depop as a buying option elsewhere.
+ * stacked on mobile. PayPal is the primary CTA; a Depop link sits below
+ * as the secondary buying path (red brand button, see below).
  */
 export default function ProductPageContent({ product, paypalClientId }) {
   return (

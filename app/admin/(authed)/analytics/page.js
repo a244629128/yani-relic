@@ -22,7 +22,8 @@ export default async function AnalyticsPage({ searchParams }) {
     totals.views > 0 ||
     totals.depopClicksAll > 0 ||
     totals.mailtoClicksAll > 0 ||
-    totals.imageZooms > 0;
+    totals.imageZooms > 0 ||
+    totals.flipDeckClaims > 0;
 
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-10 pb-32 md:pb-10">
@@ -48,7 +49,7 @@ export default async function AnalyticsPage({ searchParams }) {
       ) : (
         <>
           {/* === Totals tiles === */}
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-8">
             <Tile label="Total views" value={totals.views} />
             <Tile label="Unique visitors" value={totals.uniqueVisitors} />
             <Tile
