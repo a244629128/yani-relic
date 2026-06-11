@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { BLUR_DATA_URL } from "@/data/products";
-import { uploadMediaFile } from "@/lib/products-actions";
+import { uploadFileDirect } from "@/lib/client-upload";
 
 export default function ImageList({ value = [], onChange }) {
   const [draft, setDraft] = useState("");
@@ -37,16 +37,12 @@ export default function ImageList({ value = [], onChange }) {
     setUploading(true);
     const uploaded = [];
     for (let i = 0; i < list.length; i++) {
-      setProgressLabel(`Uploading ${i + 1} of ${list.length}…`);
-      const fd = new FormData();
-      fd.append("file", list[i]);
       try {
-        const res = await uploadMediaFile(fd);
-        if (res.ok) {
-          uploaded.push(res.url);
-        } else {
-          setError(`${list[i].name}: ${res.error}`);
-        }
+        const url = await uploadFileDirect(list[i], {
+          onProgress: (label) =>
+            setProgressLabel(`${i + 1} of ${list.length} · ${label}`),
+        });
+        uploaded.push(url);
       } catch (err) {
         setError(`${list[i].name}: ${err.message || "Upload failed"}`);
       }

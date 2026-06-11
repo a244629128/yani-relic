@@ -10,7 +10,8 @@ const csp = [
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co",
   "media-src 'self' https://www.tiktok.com https://*.supabase.co",
-  "connect-src 'self'" + (isDev ? " ws: http: https:" : ""),
+  // Browser uploads files directly to Supabase Storage via signed URLs.
+  "connect-src 'self' https://*.supabase.co" + (isDev ? " ws: http: https:" : ""),
   "frame-src https://www.tiktok.com https://www.depop.com",
   "frame-ancestors 'none'",
   "form-action 'self'",
@@ -37,12 +38,6 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  experimental: {
-    serverActions: {
-      // Image cap is 5MB and video cap is 20MB; pad a bit for multipart overhead.
-      bodySizeLimit: "25mb",
-    },
-  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },

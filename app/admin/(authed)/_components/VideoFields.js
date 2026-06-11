@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { uploadMediaFile } from "@/lib/products-actions";
+import { uploadFileDirect } from "@/lib/client-upload";
 
 export default function VideoFields({ value, onChange }) {
   const v = value || { src: "", poster: "" };
@@ -21,13 +21,11 @@ export default function VideoFields({ value, onChange }) {
     if (!file) return;
     setError("");
     setUploading(true);
-    setProgressLabel("Uploading video…");
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await uploadMediaFile(fd);
-      if (res.ok) update({ src: res.url });
-      else setError(res.error || "Upload failed");
+      const url = await uploadFileDirect(file, {
+        onProgress: (label) => setProgressLabel(`Video · ${label}`),
+      });
+      update({ src: url });
     } catch (err) {
       setError(err.message || "Upload failed");
     } finally {
@@ -41,13 +39,11 @@ export default function VideoFields({ value, onChange }) {
     if (!file) return;
     setError("");
     setUploading(true);
-    setProgressLabel("Uploading poster…");
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await uploadMediaFile(fd);
-      if (res.ok) update({ poster: res.url });
-      else setError(res.error || "Upload failed");
+      const url = await uploadFileDirect(file, {
+        onProgress: (label) => setProgressLabel(`Poster · ${label}`),
+      });
+      update({ poster: url });
     } catch (err) {
       setError(err.message || "Upload failed");
     } finally {
