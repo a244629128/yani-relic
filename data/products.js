@@ -215,7 +215,7 @@ products.forEach((p) => {
 export const featuredProducts = products.filter((p) => p.featured);
 
 export const links = {
-  depop: "https://www.depop.com/yanirelics",
+  depop: "https://www.depop.com/glitchydollhaus/",
   tiktok: "https://www.tiktok.com/@yanirelics",
   instagram: "https://www.instagram.com/yanirelics",
   email: "hello@yanirelics.com",
