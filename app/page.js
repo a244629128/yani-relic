@@ -7,6 +7,7 @@ import Sparkles from "@/components/decor/Sparkles";
 import MoonPhaseDivider from "@/components/decor/MoonPhaseDivider";
 import { links } from "@/data/products";
 import { getProducts } from "@/lib/products-db";
+import DepopLink from "@/components/DepopLink";
 
 export default async function Home() {
   const products = await getProducts();
@@ -56,14 +57,9 @@ export default async function Home() {
               <Link href="/shop" className="btn-relic">
                 View Relics
               </Link>
-              <a
-                href={links.depop}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-relic-link"
-              >
+              <DepopLink source="hero" className="btn-relic-link">
                 Shop on Depop →
-              </a>
+              </DepopLink>
             </div>
           </div>
         </section>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductForm from "../_components/ProductForm";
 import DeleteButton from "../_components/DeleteButton";
+import ResetProductAnalyticsButton from "../_components/ResetProductAnalyticsButton";
 import { getProduct } from "@/lib/products-db";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +24,11 @@ export default async function EditProductPage({ params }) {
         Edit {product.name}
       </h1>
       <ProductForm initial={product} isNew={false} />
-      <div className="mt-12 pt-6 border-t border-parchment/15">
-        <p className="text-rose-300/70 text-xs uppercase tracking-[0.22em] mb-3">
+      <div className="mt-12 pt-6 border-t border-parchment/15 space-y-4">
+        <p className="text-rose-300/70 text-xs uppercase tracking-[0.22em] mb-1">
           Danger zone
         </p>
+        <ResetProductAnalyticsButton id={product.id} name={product.name} />
         <DeleteButton id={product.id} name={product.name} />
       </div>
     </main>

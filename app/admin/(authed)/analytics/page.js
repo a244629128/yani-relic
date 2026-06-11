@@ -5,6 +5,7 @@ import {
   formatDwell,
   formatPct,
 } from "@/lib/analytics-db";
+import ResetAllAnalyticsButton from "../_components/ResetAllAnalyticsButton";
 
 export const dynamic = "force-dynamic"; // analytics is always live
 
@@ -17,7 +18,11 @@ export default async function AnalyticsPage({ searchParams }) {
     getRecentActivity({ hours: 24 }),
   ]);
 
-  const hasAny = totals.views > 0 || totals.depopClicks > 0 || totals.imageZooms > 0;
+  const hasAny =
+    totals.views > 0 ||
+    totals.depopClicksAll > 0 ||
+    totals.mailtoClicksAll > 0 ||
+    totals.imageZooms > 0;
 
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-10 pb-32 md:pb-10">
@@ -26,6 +31,10 @@ export default async function AnalyticsPage({ searchParams }) {
           <h1 className="font-chancery text-4xl text-cream">Analytics</h1>
           <p className="text-cream-dim text-sm mt-1">
             Anonymous engagement signals — last {days} days.
+          </p>
+          <p className="text-cream-dim/60 text-[11px] italic mt-1 max-w-xl">
+            Unique visitor counts use a localStorage UUID and can be inflated by
+            scripted abuse — cross-check Vercel Analytics for ground truth.
           </p>
         </div>
         <div className="flex gap-2">
@@ -39,10 +48,19 @@ export default async function AnalyticsPage({ searchParams }) {
       ) : (
         <>
           {/* === Totals tiles === */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
             <Tile label="Total views" value={totals.views} />
             <Tile label="Unique visitors" value={totals.uniqueVisitors} />
-            <Tile label="Depop clicks" value={totals.depopClicks} />
+            <Tile
+              label="Depop clicks (all)"
+              value={totals.depopClicksAll}
+              hint={`${totals.depopClicksPerProduct} per relic · ${totals.depopClicksGeneral} site-wide`}
+            />
+            <Tile
+              label="Email clicks (all)"
+              value={totals.mailtoClicksAll}
+              hint={`${totals.mailtoClicksPerProduct} per relic · ${totals.mailtoClicksGeneral} site-wide`}
+            />
             <Tile label="Fullscreen opens" value={totals.imageZooms} />
           </div>
 
@@ -58,8 +76,9 @@ export default async function AnalyticsPage({ searchParams }) {
                     <Th className="text-left">Relic</Th>
                     <Th>Views</Th>
                     <Th>Avg dwell</Th>
-                    <Th>Depop clicks</Th>
-                    <Th>Depop CTR</Th>
+                    <Th>Depop</Th>
+                    <Th>Email</Th>
+                    <Th>Intent CTR</Th>
                     <Th>Fullscreen</Th>
                   </tr>
                 </thead>
@@ -92,7 +111,8 @@ export default async function AnalyticsPage({ searchParams }) {
                       <Td>{r.views || "—"}</Td>
                       <Td>{formatDwell(r.avgDwellMs)}</Td>
                       <Td>{r.depopClicks || "—"}</Td>
-                      <Td>{formatPct(r.depopCtr)}</Td>
+                      <Td>{r.mailtoClicks || "—"}</Td>
+                      <Td>{formatPct(r.intentCtr)}</Td>
                       <Td>{r.imageZooms || "—"}</Td>
                     </tr>
                   ))}
@@ -100,9 +120,9 @@ export default async function AnalyticsPage({ searchParams }) {
               </table>
             </div>
             <p className="text-cream-dim/60 text-xs italic mt-2">
-              Avg dwell is directional, not exact (visitor walkaways are
-              capped at 5 min and paused when the tab is hidden). Depop CTR =
-              Depop clicks ÷ views.
+              Avg dwell is directional, not exact (capped at 5 min, paused
+              when the tab is hidden). Intent CTR = (Depop clicks + Email
+              clicks) ÷ views — combined purchase-intent signal.
             </p>
           </section>
 
@@ -135,6 +155,14 @@ export default async function AnalyticsPage({ searchParams }) {
               </ul>
             </section>
           )}
+
+          {/* Danger zone */}
+          <div className="mt-12 pt-6 border-t border-parchment/15">
+            <p className="text-rose-300/70 text-xs uppercase tracking-[0.22em] mb-3">
+              Danger zone
+            </p>
+            <ResetAllAnalyticsButton />
+          </div>
         </>
       )}
     </main>
@@ -156,13 +184,16 @@ function RangePill({ href, label, active }) {
   );
 }
 
-function Tile({ label, value }) {
+function Tile({ label, value, hint }) {
   return (
     <div className="bg-forest/40 border border-parchment/15 rounded-md p-4">
       <p className="text-[10px] uppercase tracking-[0.18em] text-cream-dim/70 mb-1">
         {label}
       </p>
       <p className="font-chancery text-4xl text-labradorite-glow">{value}</p>
+      {hint && (
+        <p className="text-[10px] text-cream-dim/60 italic mt-1">{hint}</p>
+      )}
     </div>
   );
 }

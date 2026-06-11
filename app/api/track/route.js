@@ -13,7 +13,15 @@ import { createServerSupabase } from "@/lib/supabase";
 
 export const runtime = "nodejs";
 
-const ALLOWED_EVENTS = new Set(["view", "depop_click", "image_zoom"]);
+const ALLOWED_EVENTS = new Set([
+  "view",
+  "depop_click",
+  "depop_click_general",
+  "mailto_click",
+  "mailto_click_general",
+  "image_zoom",
+]);
+const GENERAL_EVENTS = new Set(["depop_click_general", "mailto_click_general"]);
 const MAX_DURATION = 5 * 60 * 1000; // 5 minutes; matches DB constraint
 
 export async function POST(req) {
@@ -29,11 +37,18 @@ export async function POST(req) {
 
   // Light validation — anything wrong, drop silently with 204 so the browser
   // doesn't retry. We don't want failed analytics to look like errors.
-  if (typeof productId !== "string" || productId.length === 0 || productId.length > 64) {
-    return new NextResponse(null, { status: 204 });
-  }
   if (!ALLOWED_EVENTS.has(eventType)) {
     return new NextResponse(null, { status: 204 });
+  }
+  // Per-product events require a product_id; general clicks must NOT have one.
+  if (GENERAL_EVENTS.has(eventType)) {
+    if (productId !== undefined && productId !== null) {
+      return new NextResponse(null, { status: 204 });
+    }
+  } else {
+    if (typeof productId !== "string" || productId.length === 0 || productId.length > 64) {
+      return new NextResponse(null, { status: 204 });
+    }
   }
 
   let cleanDuration = null;
@@ -59,7 +74,7 @@ export async function POST(req) {
 
   const sb = createServerSupabase();
   const { error } = await sb.from("product_events").insert({
-    product_id: productId,
+    product_id: GENERAL_EVENTS.has(eventType) ? null : productId,
     event_type: eventType,
     duration_ms: cleanDuration,
     session_id: cleanSession,

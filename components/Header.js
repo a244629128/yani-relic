@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { links } from "@/data/products";
+import { trackDepopClickGeneral } from "@/lib/analytics";
 
 const nav = [
   { href: "/", label: "Home" },
@@ -92,6 +93,7 @@ export default function Header() {
             href={links.depop}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackDepopClickGeneral("header-icon")}
             aria-label="Shop on Depop"
             className="hover:text-labradorite-light transition-colors"
           >
@@ -180,6 +182,7 @@ export default function Header() {
               href={links.depop}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackDepopClickGeneral("header-drawer")}
               className="btn-relic"
             >
               Shop on Depop

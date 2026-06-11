@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { links } from "@/data/products";
+import { trackDepopClickGeneral } from "@/lib/analytics";
 
 /**
  * Sticky bottom action bar — visible only on mobile (md:hidden).
@@ -32,6 +33,7 @@ export default function MobileActionBar() {
           href={links.depop}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackDepopClickGeneral("mobile-action-bar")}
           className="flex items-center justify-center gap-2 rounded-[10px] py-2.5 text-[12px] uppercase tracking-[0.18em] text-cream"
           style={{
             background: "rgba(63, 143, 145, 0.85)",

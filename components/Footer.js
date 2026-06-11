@@ -1,5 +1,7 @@
 import Link from "next/link";
 import MoonPhaseDivider from "@/components/decor/MoonPhaseDivider";
+import DepopLink from "@/components/DepopLink";
+import MailtoLink from "@/components/MailtoLink";
 import { links } from "@/data/products";
 
 export default function Footer() {
@@ -32,9 +34,9 @@ export default function Footer() {
             <h4 className="text-xs uppercase tracking-[0.22em] text-brass-light mb-4">Find Me</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href={links.depop} target="_blank" rel="noopener noreferrer" className="hover:text-labradorite-glow">
+                <DepopLink source="footer" className="hover:text-labradorite-glow">
                   Depop →
-                </a>
+                </DepopLink>
               </li>
               <li>
                 <a href={links.tiktok} target="_blank" rel="noopener noreferrer" className="hover:text-labradorite-glow">
@@ -47,9 +49,13 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href={`mailto:${links.email}`} className="hover:text-labradorite-glow">
+                <MailtoLink
+                  href={`mailto:${links.email}`}
+                  source="footer"
+                  className="hover:text-labradorite-glow"
+                >
                   {links.email}
-                </a>
+                </MailtoLink>
               </li>
             </ul>
           </div>

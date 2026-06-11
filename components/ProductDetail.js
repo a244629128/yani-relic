@@ -4,12 +4,20 @@ import { useEffect, useRef } from "react";
 import WaxSeal from "@/components/decor/WaxSeal";
 import ProductGallery from "@/components/ProductGallery";
 import { links } from "@/data/products";
-import { trackView, trackDepopClick } from "@/lib/analytics";
+import { trackView, trackDepopClick, trackMailtoClick } from "@/lib/analytics";
 
 export default function ProductDetail({ product, onClose }) {
   const dialogRef = useRef(null);
   const openerRef = useRef(null);
   const savedScrollY = useRef(0);
+
+  // Keep onClose in a ref so the effect below only re-runs when `product`
+  // changes — not whenever the parent re-renders and passes a new inline
+  // onClose. Otherwise we'd prematurely flush the dwell timer.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!product) return;
@@ -32,7 +40,7 @@ export default function ProductDetail({ product, onClose }) {
     focusable?.[0]?.focus();
 
     const onKey = (e) => {
-      if (e.key === "Escape") onClose?.();
+      if (e.key === "Escape") onCloseRef.current?.();
       if (e.key === "Tab" && focusable && focusable.length > 0) {
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
@@ -60,7 +68,11 @@ export default function ProductDetail({ product, onClose }) {
         openerRef.current.focus();
       }
     };
-  }, [product, onClose]);
+    // Intentionally only depends on `product`. onClose is read via ref above
+    // so parent re-renders that change the inline onClose identity don't
+    // trigger a premature dwell flush + restart.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product]);
 
   if (!product) return null;
 
@@ -173,6 +185,7 @@ export default function ProductDetail({ product, onClose }) {
                   </a>
                   <a
                     href={`mailto:${links.email}?subject=Message to claim: ${encodeURIComponent(product.name)}`}
+                    onClick={() => trackMailtoClick(product.id)}
                     className="flex-1 inline-flex items-center justify-center px-6 py-3 rounded-full border border-brass/70 text-cream"
                   >
                     Message to Claim
@@ -200,6 +213,7 @@ export default function ProductDetail({ product, onClose }) {
             </a>
             <a
               href={`mailto:${links.email}?subject=Message to claim: ${encodeURIComponent(product.name)}`}
+              onClick={() => trackMailtoClick(product.id)}
               className="flex-1 inline-flex items-center justify-center px-6 py-3 rounded-full border border-brass/70 text-cream"
             >
               Message
