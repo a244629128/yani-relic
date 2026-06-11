@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   daysInMonth,
   firstWeekdayOfMonth,
@@ -9,6 +10,16 @@ import {
   shortDateLabel,
   etTodayString,
 } from "@/lib/date-helpers";
+
+// Codex MED #8: build a navigation URL that preserves existing query
+// params (e.g. ?days=30) while overriding one key (e.g. ?month=...).
+function buildHref(current, key, value) {
+  const params = new URLSearchParams(current);
+  if (value == null) params.delete(key);
+  else params.set(key, String(value));
+  const s = params.toString();
+  return s ? `?${s}` : "?";
+}
 
 // Tab options for the metric switcher above the heatmap. Codex called
 // out that "Clicks" was ambiguous — renamed "Intent" to make it clear
@@ -37,6 +48,7 @@ const WEEKDAY_HEADERS = ["S", "M", "T", "W", "T", "F", "S"];
 export default function CalendarHeatmap({ year, month, monthData }) {
   const [selectedDay, setSelectedDay] = useState(null);
   const [metric, setMetric] = useState("views");
+  const searchParams = useSearchParams();
 
   const days = monthData?.days || {};
   const monthMax = monthData?.monthMax || {};
@@ -81,7 +93,11 @@ export default function CalendarHeatmap({ year, month, monthData }) {
       {/* Month nav */}
       <div className="flex items-center justify-between mb-3 bg-forest/40 border border-parchment/15 rounded-md px-3 py-2">
         <Link
-          href={`?month=${prevMonth.y}-${String(prevMonth.m).padStart(2, "0")}`}
+          href={buildHref(
+            searchParams,
+            "month",
+            `${prevMonth.y}-${String(prevMonth.m).padStart(2, "0")}`
+          )}
           className="text-[11px] uppercase tracking-[0.18em] text-cream-dim hover:text-labradorite-light"
           aria-label="Previous month"
         >
@@ -91,7 +107,11 @@ export default function CalendarHeatmap({ year, month, monthData }) {
           {monthLabel(year, month)}
         </span>
         <Link
-          href={`?month=${nextMonth.y}-${String(nextMonth.m).padStart(2, "0")}`}
+          href={buildHref(
+            searchParams,
+            "month",
+            `${nextMonth.y}-${String(nextMonth.m).padStart(2, "0")}`
+          )}
           className="text-[11px] uppercase tracking-[0.18em] text-cream-dim hover:text-labradorite-light"
           aria-label="Next month"
         >
@@ -190,7 +210,9 @@ export default function CalendarHeatmap({ year, month, monthData }) {
       </div>
 
       {/* Inline drill-down panel */}
-      {selectedDay && selected && <DayDrillDown date={selectedDay} data={selected} />}
+      {selectedDay && selected && (
+        <DayDrillDown date={selectedDay} data={selected} metric={metric} />
+      )}
       {selectedDay && !selected && (
         <div className="mt-4 bg-forest/40 border border-parchment/15 rounded-md p-4 text-center text-cream-dim italic text-sm">
           No events on {shortDateLabel(selectedDay)}.
@@ -200,7 +222,27 @@ export default function CalendarHeatmap({ year, month, monthData }) {
   );
 }
 
-function DayDrillDown({ date, data }) {
+function DayDrillDown({ date, data, metric }) {
+  // Codex MED #7: re-sort perRelic by the active metric so the user's
+  // chosen lens (Views / Intent / Flip deck / etc.) is what drives the
+  // row ordering. Falls back to views for stability.
+  const sortKey =
+    metric === "visitors"
+      ? "views" // visitors aren't tracked per-relic — fall back
+      : metric;
+  const perRelic = useMemo(() => {
+    const arr = [...(data.perRelic || [])];
+    arr.sort(
+      (a, b) =>
+        (b[sortKey] || 0) - (a[sortKey] || 0) ||
+        (b.views || 0) - (a.views || 0)
+    );
+    return arr;
+  }, [data.perRelic, sortKey]);
+  return <DayDrillDownInner date={date} data={data} perRelic={perRelic} />;
+}
+
+function DayDrillDownInner({ date, data, perRelic }) {
   return (
     <div className="mt-4 bg-forest/40 border border-parchment/15 rounded-md p-4 sm:p-5">
       <div className="flex items-baseline justify-between gap-3 flex-wrap mb-3">
@@ -226,7 +268,7 @@ function DayDrillDown({ date, data }) {
         </div>
       </div>
 
-      {data.perRelic.length === 0 ? (
+      {perRelic.length === 0 ? (
         <p className="text-cream-dim/70 italic text-sm">
           Activity wasn&apos;t tied to specific relics this day.
         </p>
@@ -244,7 +286,7 @@ function DayDrillDown({ date, data }) {
               </tr>
             </thead>
             <tbody>
-              {data.perRelic.map((r) => (
+              {perRelic.map((r) => (
                 <tr key={r.id} className="border-t border-parchment/10">
                   <td className="px-2 py-1.5 text-cream">{r.name}</td>
                   <td className="px-2 py-1.5 text-right tabular-nums text-cream-dim">{r.views || "—"}</td>

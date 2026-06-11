@@ -44,18 +44,20 @@ export default async function AnalyticsPage({ searchParams }) {
           </p>
         </div>
         <div className="flex gap-2">
-          <RangePill href="?days=7" label="7d" active={days === 7} />
-          <RangePill href="?days=30" label="30d" active={days === 30} />
+          <RangePill href={buildSearch(params, { days: 7 })} label="7d" active={days === 7} />
+          <RangePill href={buildSearch(params, { days: 30 })} label="30d" active={days === 30} />
         </div>
       </div>
+
+      {/* Calendar shows independent of the rolling-window totals
+          (Codex MED #9). A historical month with activity should still
+          render even if the trailing 7d/30d window is empty. */}
+      <CalendarHeatmap year={year} month={month} monthData={monthData} />
 
       {!hasAny ? (
         <EmptyState />
       ) : (
         <>
-          {/* === Calendar heatmap === */}
-          <CalendarHeatmap year={year} month={month} monthData={monthData} />
-
           {/* === Totals tiles === */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-8">
             <Tile label="Total views" value={totals.views} />
@@ -183,6 +185,24 @@ export default async function AnalyticsPage({ searchParams }) {
       )}
     </main>
   );
+}
+
+// Build a search-param string that preserves all existing params + applies
+// the given overrides. Codex MED #8 — without this, ?days= and ?month=
+// kept clobbering each other.
+function buildSearch(currentParams, updates) {
+  const params = new URLSearchParams();
+  if (currentParams && typeof currentParams === "object") {
+    for (const [k, v] of Object.entries(currentParams)) {
+      if (v != null && typeof v !== "object") params.set(k, String(v));
+    }
+  }
+  for (const [k, v] of Object.entries(updates)) {
+    if (v == null) params.delete(k);
+    else params.set(k, String(v));
+  }
+  const s = params.toString();
+  return s ? `?${s}` : "?";
 }
 
 function RangePill({ href, label, active }) {
