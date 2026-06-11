@@ -150,17 +150,31 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
 
   if (useSafariRedirect) {
     return (
-      <SafariRedirectButton
-        product={product}
-        onLocked={(seconds) => {
-          setLockSecondsRemaining(seconds || PENDING_WINDOW_MIN_SEC);
-          setStatus("locked");
-        }}
-        onError={(msg) => {
-          setStatus("error");
-          setError(msg);
-        }}
-      />
+      <div className="w-full">
+        <SafariRedirectButton
+          product={product}
+          onLocked={(seconds) => {
+            setLockSecondsRemaining(seconds || PENDING_WINDOW_MIN_SEC);
+            setStatus("locked");
+          }}
+          onAlreadyBought={(orderId) => {
+            setStatus("redirecting");
+            redirectToThanks(orderId);
+          }}
+          onSoldOut={(msg) => {
+            setStatus("error");
+            setError(msg);
+            setTimeout(() => router.refresh(), 1800);
+          }}
+          onError={(msg) => {
+            setStatus("error");
+            setError(msg);
+          }}
+        />
+        {error && (
+          <p className="text-rose-300 text-xs italic mt-2 text-center">{error}</p>
+        )}
+      </div>
     );
   }
 
@@ -199,9 +213,13 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
             const sessionId = getSessionId();
             const res = await createPayPalOrder(product.id, sessionId);
             if (!res.ok) {
-              // Locked = another buyer is mid-checkout. Show a friendly
-              // countdown card explaining the situation honestly so the
-              // buyer doesn't assume our site is broken.
+              // Already paid for this product on this browser → route to
+              // their thanks page instead of trying to charge again.
+              if (res.alreadyBought && res.orderId) {
+                setStatus("redirecting");
+                redirectToThanks(res.orderId);
+                throw new Error(res.error || "Already paid");
+              }
               if (res.locked) {
                 setLockSecondsRemaining(res.secondsRemaining || PENDING_WINDOW_MIN_SEC);
                 setStatus("locked");
@@ -209,10 +227,6 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
               }
               setStatus("error");
               setError(res.error || "Could not start checkout");
-              // Structured flag (Codex MED) — server tells us explicitly
-              // whether the rejection means "this piece is gone now". Refresh
-              // the page so the UI updates to 'Found Home' parchment + hides
-              // the buy button. Buyer sees the error briefly first.
               if (res.soldOut) {
                 setTimeout(() => router.refresh(), 1800);
               }
@@ -361,7 +375,7 @@ function LockedCard({ secondsRemaining, onExpired }) {
  * Visual approximation of the official PayPal button — PayPal Yellow
  * (#FFC439) pill with the "PayPal" wordmark in PayPal Blue (#003087).
  */
-function SafariRedirectButton({ product, onError, onLocked }) {
+function SafariRedirectButton({ product, onError, onLocked, onSoldOut, onAlreadyBought }) {
   const [busy, setBusy] = useState(false);
   // Codex MED (Q2): React's batched setBusy(true) has a sub-100ms window
   // before the button re-renders as disabled. A really fast double-tap
@@ -377,8 +391,16 @@ function SafariRedirectButton({ product, onError, onLocked }) {
       const sessionId = getSessionId();
       const res = await createPayPalOrder(product.id, sessionId);
       if (!res.ok) {
+        if (res.alreadyBought && res.orderId) {
+          onAlreadyBought?.(res.orderId);
+          return;
+        }
         if (res.locked) {
           onLocked?.(res.secondsRemaining || PENDING_WINDOW_MIN_SEC);
+          return;
+        }
+        if (res.soldOut) {
+          onSoldOut?.(res.error || "This piece has been claimed.");
           return;
         }
         onError?.(res.error || "Could not start checkout");
