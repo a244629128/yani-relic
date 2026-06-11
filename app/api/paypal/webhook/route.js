@@ -112,27 +112,49 @@ export async function POST(req) {
 
   const { data: existing } = await sb
     .from("paypal_orders")
-    .select("status")
+    .select("status, captured_at, capture_id")
     .eq("id", orderId)
     .maybeSingle();
 
+  // Decide whether to update the status field. We keep status monotonic so
+  // a stale event can't downgrade a row past its final state. Capture
+  // metadata (capture_id / captured_at), however, lands regardless of rank
+  // — even out-of-order events should backfill those fields if missing.
+  let shouldUpdateStatus = true;
   if (existing) {
     const currentRank = STATUS_RANK[existing.status] ?? 0;
     const incomingRank = STATUS_RANK[targetStatus] ?? 0;
     if (incomingRank < currentRank) {
-      // Already past this state — ignore.
-      return new NextResponse(null, { status: 204 });
+      shouldUpdateStatus = false;
     }
   }
 
-  const updates = { status: targetStatus, raw_payload: event };
-  if (targetStatus === "captured" && !existing?.captured_at) {
+  // Extract capture metadata from the payload regardless of event type.
+  // PAYMENT.CAPTURE.* events: resource.id IS the capture id, captured at = resource.create_time.
+  // CHECKOUT.ORDER.* events: capture data nested under purchase_units.
+  let capturePayloadId = null;
+  let capturePayloadAt = null;
+  if (eventType.startsWith("PAYMENT.CAPTURE.")) {
+    capturePayloadId = resource.id || null;
+    capturePayloadAt = resource.create_time || null;
+  } else if (eventType.startsWith("CHECKOUT.ORDER.")) {
+    const cap = resource.purchase_units?.[0]?.payments?.captures?.[0];
+    capturePayloadId = cap?.id || null;
+    capturePayloadAt = cap?.create_time || null;
+  }
+
+  const updates = { raw_payload: event };
+  if (shouldUpdateStatus) {
+    updates.status = targetStatus;
+  }
+  if (capturePayloadId && !existing?.capture_id) {
+    updates.capture_id = capturePayloadId;
+  }
+  if (capturePayloadAt && !existing?.captured_at) {
+    updates.captured_at = capturePayloadAt;
+  } else if (targetStatus === "captured" && !existing?.captured_at) {
+    // Fallback if PayPal didn't include create_time for some reason.
     updates.captured_at = new Date().toISOString();
-    // Best-effort: extract buyer / capture info from the webhook resource too,
-    // in case the synchronous capture path didn't get a chance to write them.
-    if (eventType === "PAYMENT.CAPTURE.COMPLETED") {
-      updates.capture_id = resource.id || null;
-    }
   }
 
   const { error: updateErr } = await sb
