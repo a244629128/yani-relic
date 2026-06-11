@@ -20,6 +20,10 @@ import { getSessionId } from "@/lib/analytics";
  *   clientId: PayPal publishable client id (server-injected)
  *   onSuccess?: optional callback for parent to react (e.g. show thanks)
  */
+// Fallback default if the server didn't include secondsRemaining (it
+// always does, but be defensive).
+const PENDING_WINDOW_MIN_SEC = 180; // 3 min, matches paypal-actions.js
+
 // iOS Safari ONLY (not macOS Safari, not Chrome on iOS, not other
 // browsers). iOS Safari has the strictest user-activation policy: it
 // revokes the gesture token while we await our async createPayPalOrder,
@@ -37,11 +41,12 @@ function isTouchSafari() {
 
 export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
   const router = useRouter();
-  const [status, setStatus] = useState("idle"); // idle | working | redirecting | manual_review | error
+  const [status, setStatus] = useState("idle"); // idle | working | redirecting | locked | manual_review | error
   const [error, setError] = useState("");
   const [targetUrl, setTargetUrl] = useState(null);
   const [manualReviewOrderId, setManualReviewOrderId] = useState(null);
   const [useSafariRedirect, setUseSafariRedirect] = useState(false);
+  const [lockSecondsRemaining, setLockSecondsRemaining] = useState(0);
 
   // Detect iOS Safari client-side only (SSR is uniform, JS lights up
   // after hydration). Avoid render mismatch by starting `false` and
@@ -128,10 +133,29 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
     );
   }
 
+  // Locked state — another buyer is mid-checkout. Replace the button
+  // entirely with a calm card that explains the situation + counts down.
+  // When countdown hits 0, we flip back to idle so the buyer can retry.
+  if (status === "locked") {
+    return (
+      <LockedCard
+        secondsRemaining={lockSecondsRemaining}
+        onExpired={() => {
+          setStatus("idle");
+          setError("");
+        }}
+      />
+    );
+  }
+
   if (useSafariRedirect) {
     return (
       <SafariRedirectButton
         product={product}
+        onLocked={(seconds) => {
+          setLockSecondsRemaining(seconds || PENDING_WINDOW_MIN_SEC);
+          setStatus("locked");
+        }}
         onError={(msg) => {
           setStatus("error");
           setError(msg);
@@ -175,6 +199,14 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
             const sessionId = getSessionId();
             const res = await createPayPalOrder(product.id, sessionId);
             if (!res.ok) {
+              // Locked = another buyer is mid-checkout. Show a friendly
+              // countdown card explaining the situation honestly so the
+              // buyer doesn't assume our site is broken.
+              if (res.locked) {
+                setLockSecondsRemaining(res.secondsRemaining || PENDING_WINDOW_MIN_SEC);
+                setStatus("locked");
+                throw new Error(res.error || "Locked");
+              }
               setStatus("error");
               setError(res.error || "Could not start checkout");
               // Structured flag (Codex MED) — server tells us explicitly
@@ -265,6 +297,60 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
 }
 
 /**
+ * Locked state UI — replaces the buy button when another buyer is
+ * mid-checkout for this product. Calm, honest copy + live countdown so
+ * the buyer understands it's a deliberate hold, not a site bug.
+ */
+function LockedCard({ secondsRemaining, onExpired }) {
+  const [remaining, setRemaining] = useState(secondsRemaining);
+
+  useEffect(() => {
+    if (remaining <= 0) {
+      onExpired?.();
+      return;
+    }
+    const interval = setInterval(() => {
+      setRemaining((r) => {
+        if (r <= 1) {
+          clearInterval(interval);
+          onExpired?.();
+          return 0;
+        }
+        return r - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const min = Math.floor(remaining / 60);
+  const sec = remaining % 60;
+  const mmss = `${min}:${sec.toString().padStart(2, "0")}`;
+
+  return (
+    <div className="rounded-md border border-yellow-200/40 bg-yellow-200/10 p-5 text-center">
+      <p className="font-chancery text-2xl text-yellow-100 mb-2">
+        Another buyer is choosing this relic right now.
+      </p>
+      <p className="text-cream/90 text-sm leading-relaxed mb-4">
+        She&apos;s one-of-one — only one person can claim her. If they
+        complete the checkout, the relic goes to them. If they don&apos;t,
+        you&apos;ll be able to try again.
+      </p>
+      <p className="text-cream-dim text-xs uppercase tracking-[0.22em] mb-1">
+        Try again in
+      </p>
+      <p className="font-chancery text-4xl text-labradorite-glow tabular-nums">
+        {mmss}
+      </p>
+      <p className="text-cream-dim/60 text-[11px] italic mt-3">
+        This page will refresh on its own when it&apos;s your turn.
+      </p>
+    </div>
+  );
+}
+
+/**
  * Safari fallback: a PayPal-branded button that, when clicked, hits our
  * server action to create the order, then does a FULL PAGE REDIRECT to
  * PayPal's approve URL. No popup, no user-gesture-token requirement.
@@ -275,7 +361,7 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
  * Visual approximation of the official PayPal button — PayPal Yellow
  * (#FFC439) pill with the "PayPal" wordmark in PayPal Blue (#003087).
  */
-function SafariRedirectButton({ product, onError }) {
+function SafariRedirectButton({ product, onError, onLocked }) {
   const [busy, setBusy] = useState(false);
   // Codex MED (Q2): React's batched setBusy(true) has a sub-100ms window
   // before the button re-renders as disabled. A really fast double-tap
@@ -291,6 +377,10 @@ function SafariRedirectButton({ product, onError }) {
       const sessionId = getSessionId();
       const res = await createPayPalOrder(product.id, sessionId);
       if (!res.ok) {
+        if (res.locked) {
+          onLocked?.(res.secondsRemaining || PENDING_WINDOW_MIN_SEC);
+          return;
+        }
         onError?.(res.error || "Could not start checkout");
         return;
       }
