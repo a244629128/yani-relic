@@ -31,36 +31,14 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
     return null;
   }
 
-  if (status === "success") {
+  // Brief "redirecting" state — shown for the moment between PayPal
+  // capture success and router.push to /orders/thanks completing.
+  // Doesn't ever display for long; fallback for slow connections.
+  if (status === "redirecting") {
     return (
       <div className="rounded-md border border-labradorite-light/40 bg-labradorite/10 p-4 text-center">
-        <p className="font-chancery text-2xl text-labradorite-glow mb-2">
-          Thank you.
-        </p>
-        <p className="text-cream/90 text-sm leading-relaxed">
-          Your order is recorded — PayPal will email a receipt. I&apos;ll be in
-          touch within a day or two with shipping details.
-        </p>
-        {captureId && (
-          <p className="text-cream-dim/60 text-[10px] uppercase tracking-[0.18em] mt-3">
-            Confirmation: {captureId}
-          </p>
-        )}
-      </div>
-    );
-  }
-
-  if (status === "oversold") {
-    return (
-      <div className="rounded-md border border-yellow-200/40 bg-yellow-200/10 p-4 text-center">
-        <p className="font-chancery text-2xl text-yellow-100 mb-2">
-          So sorry.
-        </p>
-        <p className="text-cream/90 text-sm leading-relaxed">
-          {error || "This piece was claimed by another buyer at the same moment. Your payment will be refunded — the shop owner has been notified."}
-        </p>
-        <p className="text-cream-dim/70 text-xs italic mt-3">
-          You&apos;ll see the refund in PayPal within a day or two. No action needed on your end.
+        <p className="font-chancery text-xl text-labradorite-glow">
+          Taking you to your confirmation…
         </p>
       </div>
     );
@@ -119,17 +97,20 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
             const res = await capturePayPalOrder(data.orderID);
             if (res.ok) {
               setCaptureId(res.captureId);
-              setStatus("success");
+              setStatus("redirecting");
               onSuccess?.(res);
+              // Off to the rich thank-you page. The page itself re-fetches
+              // the order via session-bound server action and handles the
+              // small lag between client redirect and DB write via polling.
+              router.push(`/orders/thanks?o=${encodeURIComponent(data.orderID)}`);
               return;
             }
             // Oversold: buyer's money is at PayPal but our system can't
-            // allocate it. Owner will refund manually. Show a clear
-            // non-error-y message (not red doom) so the buyer trusts
-            // they'll get refunded.
+            // allocate it. Owner will refund manually. Still navigate to
+            // the thanks page — it surfaces the oversold-specific copy.
             if (res.oversold || res.manualReview) {
-              setStatus("oversold");
-              setError(res.error || "Captured — refund being processed.");
+              setStatus("redirecting");
+              router.push(`/orders/thanks?o=${encodeURIComponent(data.orderID)}`);
               return;
             }
             // Recoverable failure (e.g. INSTRUMENT_DECLINED): take the buyer

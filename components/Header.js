@@ -9,7 +9,6 @@ const nav = [
   { href: "/", label: "Home" },
   { href: "/shop", label: "Relics" },
   { href: "/about", label: "About" },
-  { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Contact" },
 ];
 
