@@ -28,9 +28,11 @@ export default function ProductPageContent({ product, paypalClientId }) {
             alt={product.name}
             productId={product.id}
           />
-          <div className="absolute top-4 left-4 z-10 pointer-events-none">
-            <WaxSeal label={product.sold ? "Found Home" : "One of One"} />
-          </div>
+          {product.sold && (
+            <div className="absolute top-4 left-4 z-10 pointer-events-none">
+              <WaxSeal label="Found Home" />
+            </div>
+          )}
         </div>
 
         {/* Info column */}
@@ -69,12 +71,6 @@ export default function ProductPageContent({ product, paypalClientId }) {
                 Flash
               </dt>
               <dd>Blue-green under direct light</dd>
-            </div>
-            <div>
-              <dt className="text-brass-light text-[11px] uppercase tracking-[0.18em] mb-1">
-                Edition
-              </dt>
-              <dd>One of one — never repeated</dd>
             </div>
           </dl>
 

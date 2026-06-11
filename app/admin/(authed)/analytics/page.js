@@ -48,7 +48,7 @@ export default async function AnalyticsPage({ searchParams }) {
       ) : (
         <>
           {/* === Totals tiles === */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-8">
             <Tile label="Total views" value={totals.views} />
             <Tile label="Unique visitors" value={totals.uniqueVisitors} />
             <Tile
@@ -62,6 +62,11 @@ export default async function AnalyticsPage({ searchParams }) {
               hint={`${totals.mailtoClicksPerProduct} per relic · ${totals.mailtoClicksGeneral} site-wide`}
             />
             <Tile label="Fullscreen opens" value={totals.imageZooms} />
+            <Tile
+              label="Flip-deck claims"
+              value={totals.flipDeckClaims}
+              hint="from homepage card flip"
+            />
           </div>
 
           {/* === Per-product table === */}
@@ -80,6 +85,7 @@ export default async function AnalyticsPage({ searchParams }) {
                     <Th>Email</Th>
                     <Th>Intent CTR</Th>
                     <Th>Fullscreen</Th>
+                    <Th>Flip deck</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -114,6 +120,7 @@ export default async function AnalyticsPage({ searchParams }) {
                       <Td>{r.mailtoClicks || "—"}</Td>
                       <Td>{formatPct(r.intentCtr)}</Td>
                       <Td>{r.imageZooms || "—"}</Td>
+                      <Td>{r.flipDeckClaims || "—"}</Td>
                     </tr>
                   ))}
                 </tbody>

@@ -465,7 +465,7 @@ function FrontCard({ relic }) {
           {relic.name}
         </p>
         <p className="text-[10px] sm:text-[10px] uppercase tracking-[0.18em] text-brass-light mt-1">
-          <span className="font-chancery normal-case tracking-normal text-[15px] text-labradorite-light">${relic.price}</span> · One of One
+          <span className="font-chancery normal-case tracking-normal text-[15px] text-labradorite-light">${relic.price}</span>
         </p>
         <Link
           href={`/shop/${relic.id}`}

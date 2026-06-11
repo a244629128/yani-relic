@@ -54,11 +54,6 @@ export default function ProductCard({ product, variant = "grid", animation = "su
             <p className="text-[10px] uppercase tracking-[0.2em] text-brass">
               Specimen № {String(index + 1).padStart(3, "0")}
             </p>
-            {!product.sold && (
-              <span className="text-[10px] uppercase tracking-[0.2em] text-brass border border-brass/40 px-2 py-0.5 rounded-sm">
-                One of One
-              </span>
-            )}
           </div>
           <h3 className="font-chancery text-2xl text-ink leading-tight mb-1">{product.name}</h3>
           <p className="text-[13px] text-ink/70 leading-snug mb-2 line-clamp-2">{product.description}</p>
@@ -98,9 +93,11 @@ export default function ProductCard({ product, variant = "grid", animation = "su
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
           />
-          <div className="absolute top-4 right-4">
-            <WaxSeal label={product.sold ? "Found Home" : "One of One"} />
-          </div>
+          {product.sold && (
+            <div className="absolute top-4 right-4">
+              <WaxSeal label="Found Home" />
+            </div>
+          )}
           {product.sold && (
             <div className="absolute inset-0 bg-ink/45 flex items-center justify-center">
               <span className="font-serif italic text-cream text-2xl">Found her person</span>
@@ -163,11 +160,6 @@ export default function ProductCard({ product, variant = "grid", animation = "su
           />
         )}
 
-        {!product.sold && (
-          <span className="absolute top-3 left-3 text-[10px] uppercase tracking-[0.18em] bg-forest/85 text-cream/90 border border-brass/40 px-2 py-1 rounded-sm">
-            One of One
-          </span>
-        )}
         {product.sold && (
           <div className="absolute inset-0 bg-ink/45 flex items-center justify-center">
             <span className="font-serif italic text-cream text-xl">Found her person</span>
