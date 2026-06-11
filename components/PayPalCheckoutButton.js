@@ -229,7 +229,12 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
           onError={(err) => {
             console.error("[PayPal] onError:", err);
             setStatus("error");
-            setError("PayPal hit an error. Please try again.");
+            // Don't clobber a more-specific error already set by createOrder
+            // (e.g. "Another buyer is checking out"). The SDK fires onError
+            // whenever createOrder throws, but our throw already set the
+            // useful message just before. Only use the generic line if
+            // nothing more specific is showing.
+            setError((prev) => prev || "PayPal hit an error. Please try again.");
             // Best-effort: free the slot so a retry isn't blocked. Server
             // verifies our session id before honoring the void.
             const orderId = err?.orderID || err?.order_id;
