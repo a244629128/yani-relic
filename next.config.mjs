@@ -37,6 +37,12 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    serverActions: {
+      // Image cap is 5MB and video cap is 20MB; pad a bit for multipart overhead.
+      bodySizeLimit: "25mb",
+    },
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
