@@ -10,6 +10,7 @@ const EMPTY = {
   id: "",
   name: "",
   price: 0,
+  salePrice: "",
   currency: "USD",
   stone: "Labradorite",
   description: "",
@@ -95,6 +96,21 @@ export default function ProductForm({ initial, isNew }) {
         </Field>
       </div>
 
+      <Field label="Sale price (optional — leave blank for no sale)">
+        <div className="flex items-center gap-3">
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.salePrice ?? ""}
+            onChange={(e) => update({ salePrice: e.target.value })}
+            placeholder={`< ${form.price || 0}`}
+            className="flex-1 bg-forest/50 border border-parchment/35 rounded-md px-3 py-2 text-cream"
+          />
+          <SalePreview price={form.price} salePrice={form.salePrice} />
+        </div>
+      </Field>
+
       <Field label="Description">
         <textarea
           value={form.description}
@@ -173,5 +189,30 @@ function Field({ label, children }) {
       </label>
       {children}
     </div>
+  );
+}
+
+function SalePreview({ price, salePrice }) {
+  const p = Number(price);
+  const s = Number(salePrice);
+  if (!Number.isFinite(s) || s <= 0 || !Number.isFinite(p) || p <= 0) {
+    return <span className="text-cream-dim/50 text-xs italic">no sale</span>;
+  }
+  if (s >= p) {
+    return (
+      <span className="text-rose-300 text-xs italic">
+        must be &lt; ${p}
+      </span>
+    );
+  }
+  const pct = Math.round((1 - s / p) * 100);
+  return (
+    <span className="text-xs flex items-center gap-2 whitespace-nowrap">
+      <span className="line-through text-cream-dim/60">${p.toFixed(2)}</span>
+      <span className="text-rose-400 font-medium">${s.toFixed(2)}</span>
+      <span className="text-[10px] uppercase tracking-[0.18em] text-rose-300 border border-rose-300/40 px-1.5 py-0.5 rounded-full">
+        {pct}% off
+      </span>
+    </span>
   );
 }

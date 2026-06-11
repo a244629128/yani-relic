@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getProducts } from "@/lib/products-db";
 import { BLUR_DATA_URL } from "@/data/products";
+import BulkSalePanel from "./_components/BulkSalePanel";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export default async function AdminListPage() {
   const available = products.filter((p) => !p.sold).length;
   const sold = total - available;
   const featured = products.filter((p) => p.featured).length;
+  const onSale = products.filter((p) => !p.sold && p.onSale).length;
 
   return (
     <main className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-10 pb-32 md:pb-10">
@@ -25,6 +27,8 @@ export default async function AdminListPage() {
           + New relic
         </Link>
       </div>
+
+      <BulkSalePanel activeSalesCount={onSale} />
 
       {products.length === 0 ? (
         <div className="card-relic p-8 text-center text-cream-dim">
@@ -59,7 +63,15 @@ export default async function AdminListPage() {
               <div className="flex-1 min-w-0">
                 <p className="font-chancery text-cream text-xl truncate">{p.name}</p>
                 <p className="text-xs text-cream-dim mt-0.5">
-                  <span className="text-labradorite-light">${p.price}</span>
+                  {p.onSale ? (
+                    <>
+                      <span className="line-through text-cream-dim/60">${p.price}</span>{" "}
+                      <span className="text-rose-400">${p.salePrice}</span>
+                      <span className="text-rose-300 ml-1">({p.percentOff}% off)</span>
+                    </>
+                  ) : (
+                    <span className="text-labradorite-light">${p.price}</span>
+                  )}
                   {" · "}
                   {p.sold ? "Sold" : "Available"}
                   {p.featured && " · ★ Featured"}

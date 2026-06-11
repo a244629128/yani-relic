@@ -54,9 +54,16 @@ export default function RelatedRelics({ currentId, allProducts = [] }) {
               <p className="font-chancery text-lg sm:text-xl text-cream group-hover:text-labradorite-glow transition-colors">
                 {p.name}
               </p>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-cream-dim/70">
-                ${p.price}
-              </p>
+              {p.onSale ? (
+                <p className="text-[11px] uppercase tracking-[0.18em] flex items-center justify-center gap-1.5">
+                  <span className="text-rose-400">${p.salePrice}</span>
+                  <span className="line-through text-cream-dim/50">${p.price}</span>
+                </p>
+              ) : (
+                <p className="text-[11px] uppercase tracking-[0.18em] text-cream-dim/70">
+                  ${p.price}
+                </p>
+              )}
             </div>
           </Link>
         ))}

@@ -78,11 +78,28 @@ export default function ProductPageContent({ product, paypalClientId }) {
             </div>
           </dl>
 
-          <div className="flex items-baseline gap-2 mb-6">
-            <span className="font-chancery text-5xl text-labradorite-glow">
-              ${product.price}
-            </span>
-            <span className="text-xs text-cream-dim/70">{product.currency}</span>
+          <div className="flex items-baseline gap-3 flex-wrap mb-6">
+            {product.onSale ? (
+              <>
+                <span className="font-chancery text-5xl text-rose-400">
+                  ${product.salePrice}
+                </span>
+                <span className="line-through text-cream-dim/60 text-2xl font-chancery">
+                  ${product.price}
+                </span>
+                <span className="text-[11px] uppercase tracking-[0.22em] text-rose-200 bg-rose-700/30 border border-rose-300/40 px-2.5 py-1 rounded-full">
+                  {product.percentOff}% off
+                </span>
+                <span className="text-xs text-cream-dim/70 ml-1">{product.currency}</span>
+              </>
+            ) : (
+              <>
+                <span className="font-chancery text-5xl text-labradorite-glow">
+                  ${product.price}
+                </span>
+                <span className="text-xs text-cream-dim/70">{product.currency}</span>
+              </>
+            )}
           </div>
 
           {/* Buy CTAs — PayPal primary, Shop on Depop secondary. */}

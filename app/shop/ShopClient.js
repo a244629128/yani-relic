@@ -17,11 +17,15 @@ const SORT_OPTIONS = [
 function sortProducts(items, sortKey) {
   if (sortKey === "default") return items;
   const arr = [...items];
+  // Use effectivePrice for sorting so on-sale items rank by what the buyer
+  // actually pays (a $68 piece at $50 sale sorts as $50). Fallback to price
+  // for any product that doesn't expose effectivePrice (defensive).
+  const effective = (p) => Number(p.effectivePrice ?? p.price);
   switch (sortKey) {
     case "price-asc":
-      return arr.sort((a, b) => a.price - b.price);
+      return arr.sort((a, b) => effective(a) - effective(b));
     case "price-desc":
-      return arr.sort((a, b) => b.price - a.price);
+      return arr.sort((a, b) => effective(b) - effective(a));
     case "name-asc":
       return arr.sort((a, b) => a.name.localeCompare(b.name));
     case "name-desc":
