@@ -33,7 +33,7 @@ function sortProducts(items, sortKey) {
   }
 }
 
-function ShopPageInner({ products }) {
+function ShopPageInner({ products, paypalClientId }) {
   const [open, setOpen] = useState(null);
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("default");
@@ -152,18 +152,22 @@ function ShopPageInner({ products }) {
           )}
         </section>
 
-        <ProductDetail product={open} onClose={() => setOpen(null)} />
+        <ProductDetail
+          product={open}
+          onClose={() => setOpen(null)}
+          paypalClientId={paypalClientId}
+        />
       </main>
       <Footer />
     </>
   );
 }
 
-export default function ShopClient({ products }) {
+export default function ShopClient({ products, paypalClientId }) {
   // useSearchParams must be wrapped in Suspense in Next 15
   return (
     <Suspense fallback={null}>
-      <ShopPageInner products={products} />
+      <ShopPageInner products={products} paypalClientId={paypalClientId} />
     </Suspense>
   );
 }

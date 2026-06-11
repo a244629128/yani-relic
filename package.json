@@ -10,6 +10,7 @@
     "seed": "node scripts/seed-products.mjs"
   },
   "dependencies": {
+    "@paypal/react-paypal-js": "^10.0.0",
     "@supabase/supabase-js": "^2.108.1",
     "@vercel/analytics": "^2.0.1",
     "next": "^15.5.19",

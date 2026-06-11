@@ -30,6 +30,12 @@ export default async function AdminAuthedLayout({ children }) {
             >
               Analytics
             </Link>
+            <Link
+              href="/admin/orders"
+              className="text-[11px] uppercase tracking-[0.18em] text-cream-dim hover:text-labradorite-light"
+            >
+              Orders
+            </Link>
           </div>
           <div className="flex items-center gap-4">
             <Link

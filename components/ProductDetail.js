@@ -3,10 +3,11 @@
 import { useEffect, useRef } from "react";
 import WaxSeal from "@/components/decor/WaxSeal";
 import ProductGallery from "@/components/ProductGallery";
+import PayPalCheckoutButton from "@/components/PayPalCheckoutButton";
 import { links } from "@/data/products";
 import { trackView, trackDepopClick, trackMailtoClick } from "@/lib/analytics";
 
-export default function ProductDetail({ product, onClose }) {
+export default function ProductDetail({ product, onClose, paypalClientId = null }) {
   const dialogRef = useRef(null);
   const openerRef = useRef(null);
   const savedScrollY = useRef(0);
@@ -166,31 +167,45 @@ export default function ProductDetail({ product, onClose }) {
               <span className="text-xs text-cream-dim/70">{product.currency}</span>
             </div>
 
-            {/* Desktop inline CTAs */}
-            <div className="hidden md:block">
+            {/* Buy CTAs — PayPal primary, Depop + Message secondary */}
+            <div>
               {product.sold ? (
                 <div className="parchment-soft text-ink rounded-sm p-4 text-sm italic font-serif text-center">
                   This one has found her person. Hush.
                 </div>
               ) : (
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <a
-                    href={links.depop}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => trackDepopClick(product.id)}
-                    className="flex-1 inline-flex items-center justify-center px-6 py-3 rounded-full bg-labradorite hover:bg-labradorite-light text-cream font-medium"
-                  >
-                    Shop on Depop
-                  </a>
-                  <a
-                    href={`mailto:${links.email}?subject=Message to claim: ${encodeURIComponent(product.name)}`}
-                    onClick={() => trackMailtoClick(product.id)}
-                    className="flex-1 inline-flex items-center justify-center px-6 py-3 rounded-full border border-brass/70 text-cream"
-                  >
-                    Message to Claim
-                  </a>
-                </div>
+                <>
+                  {/* Primary: PayPal smart button (full width, tall) */}
+                  {paypalClientId && (
+                    <div className="mb-4">
+                      <PayPalCheckoutButton
+                        product={product}
+                        clientId={paypalClientId}
+                      />
+                    </div>
+                  )}
+
+                  {/* Secondary: Depop + Message — smaller pills.
+                      Hidden on mobile (the sticky bottom strip carries them on mobile). */}
+                  <div className="hidden md:flex gap-2 text-[12px]">
+                    <a
+                      href={links.depop}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackDepopClick(product.id)}
+                      className="flex-1 inline-flex items-center justify-center px-4 py-2 rounded-full border border-brass/40 text-cream-dim hover:border-labradorite-light hover:text-labradorite-glow transition-colors"
+                    >
+                      Shop on Depop
+                    </a>
+                    <a
+                      href={`mailto:${links.email}?subject=Message to claim: ${encodeURIComponent(product.name)}`}
+                      onClick={() => trackMailtoClick(product.id)}
+                      className="flex-1 inline-flex items-center justify-center px-4 py-2 rounded-full border border-brass/40 text-cream-dim hover:border-labradorite-light hover:text-labradorite-glow transition-colors"
+                    >
+                      Message to Claim
+                    </a>
+                  </div>
+                </>
               )}
             </div>
           </div>

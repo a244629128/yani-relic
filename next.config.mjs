@@ -5,14 +5,16 @@ const isDev = process.env.NODE_ENV !== "production";
 // In dev, Next.js needs 'unsafe-eval' for HMR/RSC; we relax only in dev.
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com https://www.paypal.com https://www.paypalobjects.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co",
+  "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co https://www.paypalobjects.com",
   "media-src 'self' https://www.tiktok.com https://*.supabase.co",
   // Browser uploads files directly to Supabase Storage via signed URLs.
-  "connect-src 'self' https://*.supabase.co" + (isDev ? " ws: http: https:" : ""),
-  "frame-src https://www.tiktok.com https://www.depop.com",
+  // PayPal SDK posts to its own analytics + order endpoints from the browser.
+  "connect-src 'self' https://*.supabase.co https://www.paypal.com https://www.sandbox.paypal.com" +
+    (isDev ? " ws: http: https:" : ""),
+  "frame-src https://www.tiktok.com https://www.depop.com https://www.paypal.com https://www.sandbox.paypal.com",
   "frame-ancestors 'none'",
   "form-action 'self'",
   "base-uri 'self'",
