@@ -22,9 +22,25 @@ import { getSessionId } from "@/lib/analytics";
  */
 export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
   const router = useRouter();
-  const [status, setStatus] = useState("idle"); // idle | working | success | error | oversold
+  const [status, setStatus] = useState("idle"); // idle | working | redirecting | manual_review | error
   const [error, setError] = useState("");
-  const [captureId, setCaptureId] = useState(null);
+
+  // Q3: if router.push hangs (client-nav network blip after PayPal already
+  // captured the buyer's money), fall back to a hard navigation so the
+  // buyer doesn't sit on the "Taking you to your confirmation…" screen
+  // forever.
+  const redirectToThanks = (paypalOrderId) => {
+    const url = `/orders/thanks?o=${encodeURIComponent(paypalOrderId)}`;
+    router.push(url);
+    setTimeout(() => {
+      if (
+        typeof window !== "undefined" &&
+        !window.location.pathname.startsWith("/orders/thanks")
+      ) {
+        window.location.assign(url);
+      }
+    }, 2500);
+  };
 
   if (!clientId) {
     // Owner hasn't configured PayPal yet — silently hide.
@@ -39,6 +55,36 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
       <div className="rounded-md border border-labradorite-light/40 bg-labradorite/10 p-4 text-center">
         <p className="font-chancery text-xl text-labradorite-glow">
           Taking you to your confirmation…
+        </p>
+      </div>
+    );
+  }
+
+  // Manual-review state: PayPal captured the money but our DB couldn't
+  // record the order cleanly (both the captured + oversold UPDATEs
+  // failed). Buyer's money is safe at PayPal; the owner needs to
+  // reconcile manually. Don't redirect — buyer needs the clear support
+  // ask in front of them.
+  if (status === "manual_review") {
+    return (
+      <div className="rounded-md border border-yellow-200/40 bg-yellow-200/10 p-4 text-center">
+        <p className="font-chancery text-2xl text-yellow-100 mb-2">
+          Payment captured — please contact us
+        </p>
+        <p className="text-cream/90 text-sm leading-relaxed">
+          {error ||
+            "Your payment was taken by PayPal, but our system needs to reconcile."}
+        </p>
+        <p className="text-cream-dim/80 text-xs italic mt-3">
+          Write to{" "}
+          <a
+            href="mailto:hello@yanirelics.com"
+            className="text-labradorite-light hover:text-labradorite-glow underline underline-offset-2"
+          >
+            hello@yanirelics.com
+          </a>{" "}
+          with your PayPal receipt and we&apos;ll confirm or refund within a day.
+          Your money is safe.
         </p>
       </div>
     );
@@ -96,21 +142,26 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
             setStatus("working");
             const res = await capturePayPalOrder(data.orderID);
             if (res.ok) {
-              setCaptureId(res.captureId);
               setStatus("redirecting");
               onSuccess?.(res);
-              // Off to the rich thank-you page. The page itself re-fetches
-              // the order via session-bound server action and handles the
-              // small lag between client redirect and DB write via polling.
-              router.push(`/orders/thanks?o=${encodeURIComponent(data.orderID)}`);
+              redirectToThanks(data.orderID);
               return;
             }
-            // Oversold: buyer's money is at PayPal but our system can't
-            // allocate it. Owner will refund manually. Still navigate to
-            // the thanks page — it surfaces the oversold-specific copy.
-            if (res.oversold || res.manualReview) {
+            // Oversold (DB durably set status='oversold'): redirect to
+            // thanks page where the order's status drives the copy.
+            if (res.oversold) {
               setStatus("redirecting");
-              router.push(`/orders/thanks?o=${encodeURIComponent(data.orderID)}`);
+              redirectToThanks(data.orderID);
+              return;
+            }
+            // Q6: manualReview means PayPal captured BUT our oversold-
+            // marking ALSO failed. Order row is still 'created' in DB —
+            // redirecting to thanks would just show generic "still
+            // processing." Keep the buyer here with explicit copy + an
+            // unambiguous support ask.
+            if (res.manualReview) {
+              setStatus("manual_review");
+              setError(res.error || "Captured at PayPal — please contact us.");
               return;
             }
             // Recoverable failure (e.g. INSTRUMENT_DECLINED): take the buyer
