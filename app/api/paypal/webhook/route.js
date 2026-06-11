@@ -5,6 +5,7 @@
 import { NextResponse } from "next/server";
 import { paypalRequest } from "@/lib/paypal";
 import { createAdminSupabase } from "@/lib/supabase";
+import { markProductSold } from "@/lib/products-db";
 
 export const runtime = "nodejs";
 
@@ -112,7 +113,7 @@ export async function POST(req) {
 
   const { data: existing } = await sb
     .from("paypal_orders")
-    .select("status, captured_at, capture_id")
+    .select("status, captured_at, capture_id, product_id")
     .eq("id", orderId)
     .maybeSingle();
 
@@ -163,6 +164,21 @@ export async function POST(req) {
     .eq("id", orderId);
 
   if (!updateErr) {
+    // Phase 2B: auto-mark product sold when the webhook confirms capture.
+    // Idempotent with the synchronous capture path — both call the same
+    // helper with WHERE sold=false guard, so a second invocation no-ops.
+    // The webhook is the durability backstop in case the synchronous
+    // capture's auto-mark call ran into transient error.
+    if (updates.status === "captured") {
+      const productId = existing?.product_id || extractProductIdFromEvent(event);
+      if (productId) {
+        try {
+          await markProductSold(productId);
+        } catch (err) {
+          console.error("[paypal-webhook] auto-mark sold failed:", err);
+        }
+      }
+    }
     return new NextResponse(null, { status: 204 });
   }
 
@@ -200,4 +216,27 @@ export async function POST(req) {
   console.error("[paypal-webhook] update failed:", updateErr);
   // 500 → PayPal will retry. That's what we want for transient DB failure.
   return new NextResponse(null, { status: 500 });
+}
+
+// Fallback for the rare case where our paypal_orders row is missing
+// product_id (e.g. the webhook arrives before createPayPalOrder's insert
+// landed). PayPal includes reference_id on CHECKOUT.ORDER.* events; for
+// PAYMENT.CAPTURE.* the most reliable field is invoice_id (which we don't
+// set) or supplementary_data.related_ids.order_id (then re-fetch).
+function extractProductIdFromEvent(event) {
+  try {
+    const eventType = event?.event_type || "";
+    const resource = event?.resource || {};
+    if (eventType.startsWith("CHECKOUT.ORDER.")) {
+      return resource.purchase_units?.[0]?.reference_id || null;
+    }
+    if (eventType.startsWith("PAYMENT.CAPTURE.")) {
+      // CAPTURE events don't typically include reference_id at top level.
+      // Try the supplementary related_ids structure as best-effort.
+      return resource.supplementary_data?.related_ids?.reference_id || null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
 }

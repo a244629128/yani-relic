@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { PayPalScriptProvider, PayPalButtons, FUNDING } from "@paypal/react-paypal-js";
 import {
   createPayPalOrder,
@@ -8,6 +9,22 @@ import {
   voidPayPalOrder,
 } from "@/lib/paypal-actions";
 import { getSessionId } from "@/lib/analytics";
+
+// Server error messages that mean "this product is gone now". When we
+// see one, refresh the page so the buyer's stale view updates to show
+// the 'Found Home' parchment instead of the buy button.
+const SOLD_OUT_PHRASES = [
+  "found her person",
+  "claimed by another buyer",
+  "already been paid",
+  "already been claimed",
+];
+
+function isSoldOutError(msg) {
+  if (!msg) return false;
+  const lower = String(msg).toLowerCase();
+  return SOLD_OUT_PHRASES.some((p) => lower.includes(p));
+}
 
 /**
  * PayPal Smart Button. Renders a PayPal-branded checkout button that
@@ -20,7 +37,8 @@ import { getSessionId } from "@/lib/analytics";
  *   onSuccess?: optional callback for parent to react (e.g. show thanks)
  */
 export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
-  const [status, setStatus] = useState("idle"); // idle | working | success | error
+  const router = useRouter();
+  const [status, setStatus] = useState("idle"); // idle | working | success | error | oversold
   const [error, setError] = useState("");
   const [captureId, setCaptureId] = useState(null);
 
@@ -101,6 +119,12 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
             if (!res.ok) {
               setStatus("error");
               setError(res.error || "Could not start checkout");
+              // If the product was sold while this page was stale, refresh
+              // so the UI updates to 'Found Home' parchment + hides the
+              // buy button. Buyer sees the error briefly first.
+              if (isSoldOutError(res.error)) {
+                setTimeout(() => router.refresh(), 1800);
+              }
               throw new Error(res.error || "createOrder failed");
             }
             return res.paypalOrderId;
