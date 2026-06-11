@@ -79,17 +79,25 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
             }
             return res.paypalOrderId;
           }}
-          onApprove={async (data) => {
+          onApprove={async (data, actions) => {
             setStatus("working");
             const res = await capturePayPalOrder(data.orderID);
-            if (!res.ok) {
-              setStatus("error");
-              setError(res.error || "Capture failed");
+            if (res.ok) {
+              setCaptureId(res.captureId);
+              setStatus("success");
+              onSuccess?.(res);
               return;
             }
-            setCaptureId(res.captureId);
-            setStatus("success");
-            onSuccess?.(res);
+            // Recoverable failure (e.g. INSTRUMENT_DECLINED): take the buyer
+            // back to PayPal's funding-source selection so they can pick a
+            // different card without restarting our flow.
+            if (res.recoverable && typeof actions?.restart === "function") {
+              setStatus("idle");
+              setError(res.error || "Try a different payment method.");
+              return actions.restart();
+            }
+            setStatus("error");
+            setError(res.error || "Capture failed");
           }}
           onError={(err) => {
             console.error("[PayPal] onError:", err);
