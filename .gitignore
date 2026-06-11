@@ -44,6 +44,8 @@ next-env.d.ts
 /.playwright-mcp/
 *.png
 !/public/**/*.png
+!/app/icon.png
+!/app/apple-icon.png
 
 # Claude Code session state — not project code
 /.claude/
