@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PayPalScriptProvider, PayPalButtons, FUNDING } from "@paypal/react-paypal-js";
 import {
@@ -277,25 +277,37 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
  */
 function SafariRedirectButton({ product, onError }) {
   const [busy, setBusy] = useState(false);
+  // Codex MED (Q2): React's batched setBusy(true) has a sub-100ms window
+  // before the button re-renders as disabled. A really fast double-tap
+  // on iOS Safari could squeeze in a second createOrder while the first
+  // is in flight. A useRef syncs immediately and catches the race.
+  const inFlight = useRef(false);
 
   const onClick = async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
-    const sessionId = getSessionId();
-    const res = await createPayPalOrder(product.id, sessionId);
-    if (!res.ok) {
+    try {
+      const sessionId = getSessionId();
+      const res = await createPayPalOrder(product.id, sessionId);
+      if (!res.ok) {
+        onError?.(res.error || "Could not start checkout");
+        return;
+      }
+      if (!res.approveUrl) {
+        onError?.("PayPal did not return an approval URL — please try again.");
+        return;
+      }
+      // Full-page redirect to PayPal. The browser keeps the user-gesture
+      // intact for navigation (unlike window.open which needs the gesture
+      // token Safari already revoked).
+      window.location.href = res.approveUrl;
+    } finally {
+      // If we redirected, this never runs (page unloaded). Otherwise we
+      // re-enable so the buyer can retry.
+      inFlight.current = false;
       setBusy(false);
-      onError?.(res.error || "Could not start checkout");
-      return;
     }
-    if (!res.approveUrl) {
-      setBusy(false);
-      onError?.("PayPal did not return an approval URL — please try again.");
-      return;
-    }
-    // Full-page redirect to PayPal. The browser keeps the user-gesture
-    // intact for navigation (unlike window.open which needs the gesture
-    // token Safari already revoked).
-    window.location.href = res.approveUrl;
   };
 
   return (
