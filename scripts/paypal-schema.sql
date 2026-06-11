@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS paypal_orders (
   capture_id        TEXT,
   raw_payload       JSONB,                     -- last capture/webhook payload, for audit
   sold_marked       BOOLEAN NOT NULL DEFAULT FALSE,  -- true once admin clicks "Mark sold"
+  buyer_session_id  TEXT,                      -- anon browser session that started this order
+                                               -- (used to authorize voidPayPalOrder on cancel)
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   captured_at       TIMESTAMPTZ,
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -30,11 +32,19 @@ CREATE TABLE IF NOT EXISTS paypal_orders (
   CONSTRAINT po_currency_len
     CHECK (char_length(currency) <= 8),
   CONSTRAINT po_product_id_len
-    CHECK (char_length(product_id) <= 64)
+    CHECK (char_length(product_id) <= 64),
+  CONSTRAINT po_buyer_session_id_len
+    CHECK (buyer_session_id IS NULL OR char_length(buyer_session_id) <= 64)
 );
 
 CREATE INDEX IF NOT EXISTS idx_po_product_status
   ON paypal_orders (product_id, status);
+
+-- Defense-in-depth: at most ONE captured order per product, ever. Application
+-- logic also checks this, but the partial unique index makes oversell
+-- structurally impossible even if app logic ever races.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_po_one_captured_per_product
+  ON paypal_orders (product_id) WHERE status = 'captured';
 CREATE INDEX IF NOT EXISTS idx_po_status_captured_at
   ON paypal_orders (status, captured_at DESC);
 CREATE INDEX IF NOT EXISTS idx_po_created_at

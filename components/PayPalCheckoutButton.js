@@ -7,6 +7,7 @@ import {
   capturePayPalOrder,
   voidPayPalOrder,
 } from "@/lib/paypal-actions";
+import { getSessionId } from "@/lib/analytics";
 
 /**
  * PayPal Smart Button. Renders a PayPal-branded checkout button that
@@ -69,7 +70,8 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
           createOrder={async () => {
             setError("");
             setStatus("working");
-            const res = await createPayPalOrder(product.id);
+            const sessionId = getSessionId();
+            const res = await createPayPalOrder(product.id, sessionId);
             if (!res.ok) {
               setStatus("error");
               setError(res.error || "Could not start checkout");
@@ -93,16 +95,23 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
             console.error("[PayPal] onError:", err);
             setStatus("error");
             setError("PayPal hit an error. Please try again.");
-            // Best-effort: free the slot so a retry isn't blocked.
-            if (err?.orderID || err?.order_id) {
-              voidPayPalOrder(err.orderID || err.order_id).catch(() => {});
+            // Best-effort: free the slot so a retry isn't blocked. Server
+            // verifies our session id before honoring the void.
+            const orderId = err?.orderID || err?.order_id;
+            const sessionId = getSessionId();
+            if (orderId && sessionId) {
+              voidPayPalOrder(orderId, sessionId).catch(() => {});
             }
           }}
           onCancel={(data) => {
             setStatus("idle");
-            // User closed the popup without paying — free the slot.
-            if (data?.orderID) {
-              voidPayPalOrder(data.orderID).catch(() => {});
+            // User closed the popup without paying — free the slot. Server
+            // only voids if the buyer_session_id matches what we stored at
+            // create-time, so an attacker who learns the order id alone
+            // cannot weaken the oversell guard.
+            const sessionId = getSessionId();
+            if (data?.orderID && sessionId) {
+              voidPayPalOrder(data.orderID, sessionId).catch(() => {});
             }
           }}
         />
