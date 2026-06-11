@@ -1,11 +1,9 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
-import ProductDetail from "@/components/ProductDetail";
 import MoonPhaseDivider from "@/components/decor/MoonPhaseDivider";
 
 const SORT_OPTIONS = [
@@ -33,25 +31,16 @@ function sortProducts(items, sortKey) {
   }
 }
 
-function ShopPageInner({ products, paypalClientId }) {
-  const [open, setOpen] = useState(null);
+export default function ShopClient({ products }) {
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("default");
   const filterScrollY = useRef(0);
-  const searchParams = useSearchParams();
 
   const available = products.filter((p) => !p.sold);
   const sold = products.filter((p) => p.sold);
   const filtered =
     filter === "available" ? available : filter === "sold" ? sold : products;
   const list = sortProducts(filtered, sort);
-
-  useEffect(() => {
-    const relicId = searchParams.get("relic");
-    if (!relicId) return;
-    const found = products.find((p) => p.id === relicId);
-    if (found) setOpen(found);
-  }, [searchParams, products]);
 
   const onFilterChange = (key) => {
     filterScrollY.current = window.scrollY;
@@ -139,7 +128,6 @@ function ShopPageInner({ products, paypalClientId }) {
                 product={p}
                 variant="grid"
                 animation="magical"
-                onOpen={setOpen}
                 index={i}
               />
             ))}
@@ -151,23 +139,8 @@ function ShopPageInner({ products, paypalClientId }) {
             </p>
           )}
         </section>
-
-        <ProductDetail
-          product={open}
-          onClose={() => setOpen(null)}
-          paypalClientId={paypalClientId}
-        />
       </main>
       <Footer />
     </>
-  );
-}
-
-export default function ShopClient({ products, paypalClientId }) {
-  // useSearchParams must be wrapped in Suspense in Next 15
-  return (
-    <Suspense fallback={null}>
-      <ShopPageInner products={products} paypalClientId={paypalClientId} />
-    </Suspense>
   );
 }

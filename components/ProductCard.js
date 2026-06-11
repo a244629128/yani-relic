@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import WaxSeal from "@/components/decor/WaxSeal";
 import HoverSparkleField from "@/components/decor/HoverSparkleField";
 import { BLUR_DATA_URL } from "@/data/products";
@@ -8,8 +9,10 @@ import { BLUR_DATA_URL } from "@/data/products";
 // Universal card. `variant` switches between visual treatments.
 //   variant: "grid" | "masonry" | "editorial" | "archive"
 //   animation: "none" | "subtle" | "magical" | "dynamic"
-export default function ProductCard({ product, variant = "grid", animation = "subtle", onOpen, index = 0 }) {
-  // AD doc: card-relic handles base hover. Animation tier adds extra.
+//
+// Card clicks navigate to /shop/<product.id> (full dedicated page).
+// The old onOpen modal flow was removed in Phase 2D.
+export default function ProductCard({ product, variant = "grid", animation = "subtle", index = 0 }) {
   const transition = {
     none: "",
     subtle: "",
@@ -21,10 +24,7 @@ export default function ProductCard({ product, variant = "grid", animation = "su
     ? { animation: `fade-up 0.7s ease-out ${index * 0.07}s both` }
     : undefined;
 
-  const handleOpen = (e) => {
-    e.preventDefault();
-    onOpen?.(product);
-  };
+  const href = `/shop/${product.id}`;
   const openAriaLabel = `View details for ${product.name}`;
 
   if (variant === "archive") {
@@ -34,11 +34,10 @@ export default function ProductCard({ product, variant = "grid", animation = "su
         style={animDelay}
       >
         <HoverSparkleField cardId={product.id} count={9} />
-        <button
-          type="button"
-          onClick={handleOpen}
+        <Link
+          href={href}
           aria-label={openAriaLabel}
-          className="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 bg-ink/40 rounded-sm overflow-hidden cursor-pointer block group/img focus:outline-none focus:ring-2 focus:ring-labradorite-light"
+          className="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 bg-ink/40 rounded-sm overflow-hidden block group/img focus:outline-none focus:ring-2 focus:ring-labradorite-light"
         >
           <Image
             src={product.image}
@@ -49,7 +48,7 @@ export default function ProductCard({ product, variant = "grid", animation = "su
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
           />
-        </button>
+        </Link>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
             <p className="text-[10px] uppercase tracking-[0.2em] text-brass">
@@ -65,12 +64,12 @@ export default function ProductCard({ product, variant = "grid", animation = "su
           <p className="text-[13px] text-ink/70 leading-snug mb-2 line-clamp-2">{product.description}</p>
           <div className="flex items-center justify-between">
             <span className="font-chancery text-xl text-ink">${product.price}</span>
-            <button
-              onClick={handleOpen}
+            <Link
+              href={href}
               className="text-[11px] uppercase tracking-[0.18em] text-ink/80 hover:text-labradorite underline-offset-4 hover:underline"
             >
               View Details →
-            </button>
+            </Link>
           </div>
         </div>
       </article>
@@ -85,11 +84,10 @@ export default function ProductCard({ product, variant = "grid", animation = "su
         style={animDelay}
       >
         <HoverSparkleField cardId={product.id} count={12} />
-        <button
-          type="button"
-          onClick={handleOpen}
+        <Link
+          href={href}
           aria-label={openAriaLabel}
-          className={`relative ${aspect} w-full bg-ink/40 overflow-hidden cursor-pointer block focus:outline-none focus:ring-2 focus:ring-labradorite-light`}
+          className={`relative ${aspect} w-full bg-ink/40 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-labradorite-light`}
         >
           <Image
             src={product.image}
@@ -108,7 +106,7 @@ export default function ProductCard({ product, variant = "grid", animation = "su
               <span className="font-serif italic text-cream text-2xl">Found her person</span>
             </div>
           )}
-        </button>
+        </Link>
         <div className="p-6 sm:p-8">
           <p className="text-[11px] uppercase tracking-[0.22em] text-brass-light mb-2">
             {product.stone} · Hand-wrapped
@@ -117,12 +115,12 @@ export default function ProductCard({ product, variant = "grid", animation = "su
           <p className="text-cream-dim leading-relaxed mb-5 max-w-prose">{product.description}</p>
           <div className="flex items-center justify-between">
             <span className="font-chancery text-3xl text-labradorite-glow">${product.price}</span>
-            <button
-              onClick={handleOpen}
+            <Link
+              href={href}
               className="text-xs uppercase tracking-[0.2em] px-5 py-2.5 rounded-full border border-brass/60 text-cream hover:border-labradorite-light hover:text-labradorite-glow transition-colors"
             >
               View Details
-            </button>
+            </Link>
           </div>
         </div>
       </article>
@@ -136,11 +134,10 @@ export default function ProductCard({ product, variant = "grid", animation = "su
       style={animDelay}
     >
       <HoverSparkleField cardId={product.id} count={10} />
-      <button
-        type="button"
-        onClick={handleOpen}
+      <Link
+        href={href}
         aria-label={openAriaLabel}
-        className={`relative ${variant === "masonry" ? "" : "aspect-square"} w-full bg-ink/40 overflow-hidden cursor-pointer block focus:outline-none focus:ring-2 focus:ring-labradorite-light`}
+        className={`relative ${variant === "masonry" ? "" : "aspect-square"} w-full bg-ink/40 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-labradorite-light`}
       >
         {variant === "masonry" ? (
           <div className="relative w-full" style={{ aspectRatio: `1 / ${product.aspectRatio}` }}>
@@ -176,7 +173,7 @@ export default function ProductCard({ product, variant = "grid", animation = "su
             <span className="font-serif italic text-cream text-xl">Found her person</span>
           </div>
         )}
-      </button>
+      </Link>
       <div className="p-4 sm:p-5">
         <h3 className="font-chancery text-2xl text-cream mb-1">{product.name}</h3>
         <p className="text-xs text-cream-dim/80 italic mb-3 line-clamp-2 leading-snug">
@@ -184,12 +181,12 @@ export default function ProductCard({ product, variant = "grid", animation = "su
         </p>
         <div className="flex items-center justify-between">
           <span className="font-chancery text-xl text-labradorite-glow">${product.price}</span>
-          <button
-            onClick={handleOpen}
+          <Link
+            href={href}
             className="text-[11px] uppercase tracking-[0.18em] text-cream/80 hover:text-labradorite-glow"
           >
             View Details →
-          </button>
+          </Link>
         </div>
       </div>
     </article>

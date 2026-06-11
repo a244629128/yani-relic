@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { links } from "@/data/products";
 import { trackDepopClickGeneral } from "@/lib/analytics";
 
@@ -14,6 +15,12 @@ import { trackDepopClickGeneral } from "@/lib/analytics";
  * z-index 40 — banner (z-45) and full-screen modal (z-50) sit above it.
  */
 export default function MobileActionBar() {
+  const pathname = usePathname();
+  // Hide on /shop/[id] product pages — they have their own sticky bottom
+  // bar with "Message to Claim". Stacking both would overlap and confuse
+  // safe-area padding. /shop (listing) keeps the bar.
+  if (pathname && /^\/shop\/[^/]+/.test(pathname)) return null;
+
   return (
     <div
       className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-parchment/15"
