@@ -162,11 +162,42 @@ export async function POST(req) {
     .update(updates)
     .eq("id", orderId);
 
-  if (updateErr) {
-    console.error("[paypal-webhook] update failed:", updateErr);
-    // 500 → PayPal will retry. That's what we want for transient DB failure.
-    return new NextResponse(null, { status: 500 });
+  if (!updateErr) {
+    return new NextResponse(null, { status: 204 });
   }
 
-  return new NextResponse(null, { status: 204 });
+  // OVERSELL DETECTION at the webhook path. Same race window as the
+  // synchronous capture in lib/paypal-actions.js — if PayPal redelivers
+  // a PAYMENT.CAPTURE.COMPLETED here for a product that already has
+  // another captured row, the unique index rejects this UPDATE.
+  const isOversold =
+    updates.status === "captured" &&
+    (updateErr.code === "23505" ||
+      (typeof updateErr.message === "string" &&
+        updateErr.message.includes("uq_po_one_captured_per_product")));
+
+  if (isOversold) {
+    console.warn(
+      `[paypal-webhook] OVERSOLD: order ${orderId} blocked by unique index. Flipping to 'oversold' for admin review.`
+    );
+    const oversoldUpdates = { ...updates, status: "oversold" };
+    const { error: oversoldErr } = await sb
+      .from("paypal_orders")
+      .update(oversoldUpdates)
+      .eq("id", orderId)
+      .neq("status", "refunded"); // never overwrite a final refunded state
+    if (oversoldErr) {
+      console.error(
+        "[paypal-webhook] CRITICAL: failed to mark oversold:",
+        oversoldErr
+      );
+      // 500 → PayPal retries. Webhook is our durability backstop here.
+      return new NextResponse(null, { status: 500 });
+    }
+    return new NextResponse(null, { status: 204 });
+  }
+
+  console.error("[paypal-webhook] update failed:", updateErr);
+  // 500 → PayPal will retry. That's what we want for transient DB failure.
+  return new NextResponse(null, { status: 500 });
 }

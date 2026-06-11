@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS paypal_orders (
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
   CONSTRAINT po_status_check
-    CHECK (status IN ('created', 'approved', 'captured', 'failed', 'refunded', 'voided')),
+    CHECK (status IN ('created', 'approved', 'captured', 'failed', 'refunded', 'voided', 'oversold')),
   CONSTRAINT po_amount_positive
     CHECK (amount_cents > 0),
   CONSTRAINT po_currency_len

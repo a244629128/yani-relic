@@ -48,6 +48,22 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
     );
   }
 
+  if (status === "oversold") {
+    return (
+      <div className="rounded-md border border-yellow-200/40 bg-yellow-200/10 p-4 text-center">
+        <p className="font-chancery text-2xl text-yellow-100 mb-2">
+          So sorry.
+        </p>
+        <p className="text-cream/90 text-sm leading-relaxed">
+          {error || "This piece was claimed by another buyer at the same moment. Your payment will be refunded — the shop owner has been notified."}
+        </p>
+        <p className="text-cream-dim/70 text-xs italic mt-3">
+          You&apos;ll see the refund in PayPal within a day or two. No action needed on your end.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <PayPalScriptProvider
@@ -96,6 +112,15 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
               setCaptureId(res.captureId);
               setStatus("success");
               onSuccess?.(res);
+              return;
+            }
+            // Oversold: buyer's money is at PayPal but our system can't
+            // allocate it. Owner will refund manually. Show a clear
+            // non-error-y message (not red doom) so the buyer trusts
+            // they'll get refunded.
+            if (res.oversold || res.manualReview) {
+              setStatus("oversold");
+              setError(res.error || "Captured — refund being processed.");
               return;
             }
             // Recoverable failure (e.g. INSTRUMENT_DECLINED): take the buyer

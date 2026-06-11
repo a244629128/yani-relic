@@ -6,6 +6,7 @@ import {
   formatShippingAddress,
 } from "@/lib/orders-db";
 import MarkSoldButton from "../_components/MarkSoldButton";
+import MarkedRefundedButton from "../_components/MarkedRefundedButton";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Orders — Vault" };
@@ -17,7 +18,15 @@ const STATUS_STYLES = {
   failed:    "bg-rose-300/15 text-rose-300 border-rose-300/40",
   refunded:  "bg-rose-300/15 text-rose-300 border-rose-300/40",
   voided:    "bg-cream-dim/15 text-cream-dim border-cream-dim/30",
+  oversold:  "bg-red-900/40 text-red-200 border-red-300/60",
 };
+
+// PayPal Dashboard deep-link to a specific order. Switches sandbox vs live.
+function paypalDashboardUrl(orderId) {
+  const isLive = process.env.PAYPAL_ENV === "live";
+  const host = isLive ? "https://www.paypal.com" : "https://www.sandbox.paypal.com";
+  return `${host}/activities/details/inv/${orderId}`;
+}
 
 export default async function AdminOrdersPage() {
   const [orders, counts] = await Promise.all([
@@ -35,6 +44,18 @@ export default async function AdminOrdersPage() {
           </p>
         </div>
       </div>
+
+      {counts.oversold > 0 && (
+        <div className="mb-6 rounded-md border border-red-300/60 bg-red-900/30 p-4">
+          <p className="text-red-100 text-sm leading-relaxed">
+            <strong>⚠ {counts.oversold} oversell event{counts.oversold === 1 ? "" : "s"}</strong>{" "}
+            detected — PayPal captured the buyer&apos;s money but another buyer
+            already claimed the same relic. <strong>Refund manually in
+            PayPal Dashboard</strong>, then click <em>Marked refunded</em> on
+            the row to clear it.
+          </p>
+        </div>
+      )}
 
       {counts.needsMarkSold > 0 && (
         <div className="mb-6 rounded-md border border-yellow-200/40 bg-yellow-200/10 p-4">
@@ -61,10 +82,15 @@ export default async function AdminOrdersPage() {
           {orders.map((o) => {
             const shipping = formatShippingAddress(o.shipping_address);
             const showMarkSold = o.status === "captured" && !o.sold_marked;
+            const isOversold = o.status === "oversold";
             return (
               <li
                 key={o.id}
-                className="border border-parchment/15 rounded-md bg-forest/40 p-4 sm:p-5"
+                className={`border rounded-md p-4 sm:p-5 ${
+                  isOversold
+                    ? "border-red-300/50 bg-red-900/15"
+                    : "border-parchment/15 bg-forest/40"
+                }`}
               >
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0 flex-1">
@@ -111,9 +137,25 @@ export default async function AdminOrdersPage() {
                       Order: {o.id}
                       {o.capture_id && <> · Capture: {o.capture_id}</>}
                     </p>
+                    {isOversold && (
+                      <a
+                        href={paypalDashboardUrl(o.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.18em] text-red-200 hover:text-red-100 underline-offset-4 hover:underline"
+                      >
+                        Open in PayPal Dashboard →
+                      </a>
+                    )}
                   </div>
                   {showMarkSold && (
                     <MarkSoldButton orderId={o.id} productName={o.productName} />
+                  )}
+                  {isOversold && (
+                    <MarkedRefundedButton
+                      orderId={o.id}
+                      buyerName={o.buyer_name}
+                    />
                   )}
                 </div>
               </li>
