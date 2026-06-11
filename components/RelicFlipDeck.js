@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { links, BLUR_DATA_URL } from "@/data/products";
-import { trackDepopClick } from "@/lib/analytics";
+import Link from "next/link";
+import { BLUR_DATA_URL } from "@/data/products";
 
 const DESKTOP_DECK_SIZE = 5;
 const MOBILE_DECK_SIZE = 3;
@@ -458,21 +458,6 @@ function FrontCard({ relic }) {
               "linear-gradient(180deg, transparent 50%, rgba(13, 22, 17, 0.95) 100%)",
           }}
         />
-        <div
-          className="absolute pointer-events-none animate-glow"
-          aria-hidden
-          style={{
-            width: "60%",
-            height: "60%",
-            left: "50%",
-            top: "50%",
-            transform: "translate(-50%, -50%)",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle, rgba(111,198,200,0.32) 0%, rgba(63,143,145,0) 70%)",
-            mixBlendMode: "screen",
-          }}
-        />
       </div>
       <div className="px-2 sm:px-3 py-3 text-center">
         <p className="font-chancery text-cream text-[18px] sm:text-[20px] leading-tight">
@@ -481,18 +466,13 @@ function FrontCard({ relic }) {
         <p className="text-[10px] sm:text-[10px] uppercase tracking-[0.18em] text-brass-light mt-1">
           <span className="font-chancery normal-case tracking-normal text-[15px] text-labradorite-light">${relic.price}</span> · One of One
         </p>
-        <a
-          href={links.depop}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => {
-            e.stopPropagation();
-            trackDepopClick(relic.id);
-          }}
+        <Link
+          href={`/shop/${relic.id}`}
+          onClick={(e) => e.stopPropagation()}
           className="inline-block mt-2 text-[10px] sm:text-[10px] uppercase tracking-[0.18em] text-labradorite-light hover:text-labradorite-glow"
         >
           Claim →
-        </a>
+        </Link>
       </div>
     </div>
   );
