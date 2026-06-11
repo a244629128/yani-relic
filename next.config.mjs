@@ -8,8 +8,8 @@ const csp = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https://images.unsplash.com",
-  "media-src 'self' https://www.tiktok.com",
+  "img-src 'self' data: blob: https://images.unsplash.com https://*.supabase.co",
+  "media-src 'self' https://www.tiktok.com https://*.supabase.co",
   "connect-src 'self'" + (isDev ? " ws: http: https:" : ""),
   "frame-src https://www.tiktok.com https://www.depop.com",
   "frame-ancestors 'none'",
@@ -40,6 +40,8 @@ const nextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
+      // Supabase Storage public URLs (e.g. https://<project>.supabase.co/storage/v1/object/public/relics/...)
+      { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
   // Stop Next/webpack from picking up Playwright screenshots as file changes.

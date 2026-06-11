@@ -179,7 +179,40 @@ const SEED = [
   },
 ];
 
+async function ensureBucket() {
+  const BUCKET = "relics";
+  const { data: list, error: listErr } = await sb.storage.listBuckets();
+  if (listErr) {
+    console.error("listBuckets error:", listErr);
+    process.exit(1);
+  }
+  if (list.find((b) => b.name === BUCKET)) {
+    console.log(`✓ Storage bucket "${BUCKET}" already exists`);
+    return;
+  }
+  const { error } = await sb.storage.createBucket(BUCKET, {
+    public: true,
+    fileSizeLimit: 52428800, // 50MB
+    allowedMimeTypes: [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/avif",
+      "video/mp4",
+      "video/quicktime",
+      "video/webm",
+    ],
+  });
+  if (error) {
+    console.error("createBucket error:", error);
+    process.exit(1);
+  }
+  console.log(`✓ Created storage bucket "${BUCKET}" (public read access)`);
+}
+
 async function main() {
+  await ensureBucket();
+
   console.log(`Seeding ${SEED.length} products into Supabase...`);
   const { data, error } = await sb
     .from("products")

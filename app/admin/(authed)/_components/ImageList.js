@@ -1,26 +1,69 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BLUR_DATA_URL } from "@/data/products";
+import { uploadMediaFile } from "@/lib/products-actions";
 
 export default function ImageList({ value = [], onChange }) {
   const [draft, setDraft] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [progressLabel, setProgressLabel] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
 
   const add = () => {
     if (!draft.trim()) return;
     onChange([...value, draft.trim()]);
     setDraft("");
   };
-
   const remove = (i) => onChange(value.filter((_, idx) => idx !== i));
-
   const move = (i, dir) => {
     const next = [...value];
     const j = i + dir;
     if (j < 0 || j >= next.length) return;
     [next[i], next[j]] = [next[j], next[i]];
     onChange(next);
+  };
+
+  const uploadFiles = async (files) => {
+    setError("");
+    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (list.length === 0) {
+      setError("Only image files (JPG / PNG / WebP / AVIF) can be added here");
+      return;
+    }
+    setUploading(true);
+    const uploaded = [];
+    for (let i = 0; i < list.length; i++) {
+      setProgressLabel(`Uploading ${i + 1} of ${list.length}…`);
+      const fd = new FormData();
+      fd.append("file", list[i]);
+      try {
+        const res = await uploadMediaFile(fd);
+        if (res.ok) {
+          uploaded.push(res.url);
+        } else {
+          setError(`${list[i].name}: ${res.error}`);
+        }
+      } catch (err) {
+        setError(`${list[i].name}: ${err.message || "Upload failed"}`);
+      }
+    }
+    if (uploaded.length > 0) {
+      onChange([...value, ...uploaded]);
+    }
+    setUploading(false);
+    setProgressLabel("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (uploading) return;
+    if (e.dataTransfer.files?.length) uploadFiles(e.dataTransfer.files);
   };
 
   return (
@@ -87,10 +130,43 @@ export default function ImageList({ value = [], onChange }) {
           </button>
         </div>
       ))}
+
+      {/* Drag-drop + pick zone */}
+      <div
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className={`cursor-pointer rounded-md border-2 border-dashed px-4 py-5 text-center transition-colors ${
+          dragOver
+            ? "border-labradorite-light bg-labradorite/10"
+            : "border-parchment/30 hover:border-parchment/60"
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/avif"
+          multiple
+          hidden
+          onChange={(e) => e.target.files && uploadFiles(e.target.files)}
+        />
+        <p className="text-cream-dim text-sm">
+          {uploading ? progressLabel : "Drag photos here, or tap to choose files"}
+        </p>
+        <p className="text-cream-dim/60 text-xs mt-1">
+          JPG / PNG / WebP · auto-resized to 1600px · 5MB max each
+        </p>
+      </div>
+
+      {/* Optional: paste a URL for an externally-hosted image */}
       <div className="flex gap-2 mt-2">
         <input
           type="text"
-          placeholder="/relics/your-photo.jpg"
+          placeholder="Or paste a URL / path: /relics/your-photo.jpg"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), add())}
@@ -100,6 +176,8 @@ export default function ImageList({ value = [], onChange }) {
           Add
         </button>
       </div>
+
+      {error && <p className="text-rose-300 text-xs italic mt-1">{error}</p>}
       {value.length < 3 && (
         <p className="text-yellow-200/70 text-xs italic mt-1">
           Recommended: at least 3 images per product.

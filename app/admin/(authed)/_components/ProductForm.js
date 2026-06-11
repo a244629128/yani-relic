@@ -39,13 +39,9 @@ export default function ProductForm({ initial, isNew }) {
       try {
         const res = await saveProduct(form);
         if (res.ok) {
-          setSuccess(true);
-          setTimeout(() => setSuccess(false), 2500);
-          if (isNew) {
-            router.push(`/admin/${res.product.id}`);
-          } else {
-            router.refresh();
-          }
+          // Return to /admin after save
+          router.push("/admin");
+          router.refresh();
         } else {
           setError(res.error || "Save failed");
         }
@@ -118,27 +114,6 @@ export default function ProductForm({ initial, isNew }) {
         />
       </Field>
 
-      <Field label="Cord / chain type">
-        <input
-          type="text"
-          value={form.cordType}
-          onChange={(e) => update({ cordType: e.target.value })}
-          className="w-full bg-forest/50 border border-parchment/35 rounded-md px-3 py-2 text-cream"
-        />
-      </Field>
-
-      <Field label="Aspect ratio (0.5–2.0, default 1.0)">
-        <input
-          type="number"
-          step="0.05"
-          min="0.5"
-          max="2"
-          value={form.aspectRatio}
-          onChange={(e) => update({ aspectRatio: Number(e.target.value) })}
-          className="w-full bg-forest/50 border border-parchment/35 rounded-md px-3 py-2 text-cream"
-        />
-      </Field>
-
       <div className="flex gap-6">
         <label className="flex items-center gap-2 text-cream cursor-pointer">
           <input
@@ -157,6 +132,7 @@ export default function ProductForm({ initial, isNew }) {
             className="w-4 h-4"
           />
           Featured
+          <span className="text-cream-dim/60 text-[10px] italic">(reserved — not user-visible yet)</span>
         </label>
       </div>
 
