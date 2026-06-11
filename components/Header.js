@@ -87,32 +87,6 @@ export default function Header() {
           ))}
         </nav>
 
-        {/* RIGHT — small moon + shopping bag */}
-        <div className="hidden md:flex items-center gap-4 text-parchment">
-          <a
-            href={links.depop}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => trackDepopClickGeneral("header-icon")}
-            aria-label="Shop on Depop"
-            className="hover:text-labradorite-light transition-colors"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
-              <path d="M16 16 A 7 7 0 1 1 8 4 A 5 5 0 0 0 16 16 Z" />
-            </svg>
-          </a>
-          <a
-            href="/shop"
-            aria-label="Shop"
-            className="hover:text-labradorite-light transition-colors"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
-              <path d="M6 8 H 18 L 17 20 H 7 Z" strokeLinejoin="round" />
-              <path d="M9 8 V 6 A 3 3 0 0 1 15 6 V 8" />
-            </svg>
-          </a>
-        </div>
-
         {/* Mobile hamburger */}
         <button
           onClick={() => setOpen((v) => !v)}
