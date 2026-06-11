@@ -57,12 +57,29 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  // Handle single tap (open fullscreen on mobile) vs double tap (inline zoom).
-  // Single-tap fires after 280ms unless a second tap arrives within 300ms.
-  const handleTap = () => {
+  // Handle single tap / click (open fullscreen) vs double tap (inline pinch zoom).
+  // Mobile: single-tap opens fullscreen; double-tap toggles inline zoom.
+  // Desktop: any click opens fullscreen (no inline zoom — that's what the
+  //          fullscreen viewer is for, and double-clicks there toggle zoom).
+  const handleTap = (e) => {
+    // Ignore clicks that originated on a video element — its custom controls
+    // handle play/pause and we don't want the wrapper to swallow them.
+    if (e?.target?.tagName === "VIDEO" || e?.target?.closest?.("button")) {
+      return;
+    }
+    const isMobile =
+      typeof window !== "undefined" &&
+      window.matchMedia("(max-width: 767px)").matches;
+
+    if (!isMobile) {
+      // Desktop: any click → open fullscreen
+      if (zoom === 1) setFullscreenIdx(active);
+      return;
+    }
+
+    // Mobile path — preserve single/double tap distinction
     const now = Date.now();
     if (now - lastTap.current < 300) {
-      // Double-tap → cancel pending single-tap, do inline zoom toggle
       if (singleTapTimer.current) {
         window.clearTimeout(singleTapTimer.current);
         singleTapTimer.current = null;
@@ -73,15 +90,7 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
       return;
     }
     lastTap.current = now;
-
-    // Only fire single-tap → fullscreen on mobile-sized viewports.
-    if (typeof window === "undefined") return;
-    const isMobile = window.matchMedia("(max-width: 767px)").matches;
-    if (!isMobile) return;
-
-    // If user is currently pinch-zoomed in the inline gallery, don't open fullscreen.
     if (zoom > 1) return;
-
     singleTapTimer.current = window.setTimeout(() => {
       singleTapTimer.current = null;
       setFullscreenIdx(active);
@@ -166,7 +175,7 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
     <div className="flex flex-col">
       {/* === MAIN MEDIA === */}
       <div
-        className="relative aspect-square overflow-hidden bg-ink/40 select-none"
+        className="relative aspect-square overflow-hidden bg-ink/40 select-none group/media md:cursor-zoom-in"
         style={{ touchAction: "pan-y" }}
         onTouchStart={(e) => {
           onZoomTouchStart(e);
@@ -182,6 +191,20 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
         }}
         onClick={handleTap}
       >
+        {/* Expand affordance — desktop only, fades in on hover */}
+        <button
+          type="button"
+          aria-label="View fullscreen"
+          onClick={(e) => {
+            e.stopPropagation();
+            setFullscreenIdx(active);
+          }}
+          className="hidden md:flex absolute right-2 top-2 z-30 w-9 h-9 rounded-full bg-forest/85 border border-parchment/30 text-parchment hover:text-labradorite-light hover:border-parchment/60 backdrop-blur-sm items-center justify-center opacity-0 group-hover/media:opacity-100 transition-opacity"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M2 5 L 2 2 L 5 2 M 9 2 L 12 2 L 12 5 M 12 9 L 12 12 L 9 12 M 5 12 L 2 12 L 2 9" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
         {items.map((item, i) => (
           <div
             key={item.src + i}
