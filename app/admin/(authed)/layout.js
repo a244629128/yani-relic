@@ -20,9 +20,17 @@ export default async function AdminAuthedLayout({ children }) {
         }}
       >
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-14 flex items-center justify-between">
-          <Link href="/admin" className="font-chancery text-parchment text-2xl">
-            Vault
-          </Link>
+          <div className="flex items-center gap-5">
+            <Link href="/admin" className="font-chancery text-parchment text-2xl">
+              Vault
+            </Link>
+            <Link
+              href="/admin/analytics"
+              className="text-[11px] uppercase tracking-[0.18em] text-cream-dim hover:text-labradorite-light"
+            >
+              Analytics
+            </Link>
+          </div>
           <div className="flex items-center gap-4">
             <Link
               href="/"

@@ -5,6 +5,7 @@ import MobileActionBar from "@/components/MobileActionBar";
 import BackToTop from "@/components/BackToTop";
 import CursorSparkleTrail from "@/components/decor/CursorSparkleTrail";
 import TapBurstSparkles from "@/components/decor/TapBurstSparkles";
+import { Analytics } from "@vercel/analytics/next";
 
 const serif = Cormorant_Garamond({
   variable: "--font-serif",
@@ -50,6 +51,7 @@ export default function RootLayout({ children }) {
         <BackToTop />
         <CursorSparkleTrail />
         <TapBurstSparkles />
+        <Analytics />
       </body>
     </html>
   );

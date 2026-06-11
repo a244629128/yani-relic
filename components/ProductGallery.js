@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { BLUR_DATA_URL } from "@/data/products";
 import FullscreenViewer from "@/components/FullscreenViewer";
+import { trackImageZoom } from "@/lib/analytics";
 
 /**
  * Product image + video gallery.
@@ -22,7 +23,7 @@ import FullscreenViewer from "@/components/FullscreenViewer";
  *   images: legacy fallback if `media` not provided
  *   alt: accessible name for the active item
  */
-export default function ProductGallery({ media, images = [], alt = "" }) {
+export default function ProductGallery({ media, images = [], alt = "", productId = null }) {
   const items =
     Array.isArray(media) && media.length > 0
       ? media
@@ -73,7 +74,10 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
 
     if (!isMobile) {
       // Desktop: any click → open fullscreen
-      if (zoom === 1) setFullscreenIdx(active);
+      if (zoom === 1) {
+              if (productId) trackImageZoom(productId);
+              setFullscreenIdx(active);
+            }
       return;
     }
 
@@ -93,7 +97,10 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
     if (zoom > 1) return;
     singleTapTimer.current = window.setTimeout(() => {
       singleTapTimer.current = null;
-      setFullscreenIdx(active);
+      {
+              if (productId) trackImageZoom(productId);
+              setFullscreenIdx(active);
+            }
     }, 280);
   };
 
@@ -197,7 +204,10 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
           aria-label="View fullscreen"
           onClick={(e) => {
             e.stopPropagation();
-            setFullscreenIdx(active);
+            {
+              if (productId) trackImageZoom(productId);
+              setFullscreenIdx(active);
+            }
           }}
           className="hidden md:flex absolute right-2 top-2 z-30 w-9 h-9 rounded-full bg-forest/85 border border-parchment/30 text-parchment hover:text-labradorite-light hover:border-parchment/60 backdrop-blur-sm items-center justify-center opacity-0 group-hover/media:opacity-100 transition-opacity"
         >

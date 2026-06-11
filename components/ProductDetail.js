@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import WaxSeal from "@/components/decor/WaxSeal";
 import ProductGallery from "@/components/ProductGallery";
 import { links } from "@/data/products";
+import { trackView, trackDepopClick } from "@/lib/analytics";
 
 export default function ProductDetail({ product, onClose }) {
   const dialogRef = useRef(null);
@@ -12,6 +13,7 @@ export default function ProductDetail({ product, onClose }) {
 
   useEffect(() => {
     if (!product) return;
+    const endTracking = trackView(product.id);
     savedScrollY.current = window.scrollY;
     openerRef.current = document.activeElement;
 
@@ -46,6 +48,7 @@ export default function ProductDetail({ product, onClose }) {
     window.addEventListener("keydown", onKey);
 
     return () => {
+      endTracking();
       body.style.overflow = "";
       body.style.position = "";
       body.style.top = "";
@@ -107,6 +110,7 @@ export default function ProductDetail({ product, onClose }) {
               media={product.media}
               images={product.images || [product.image]}
               alt={product.name}
+              productId={product.id}
             />
             <div className="absolute top-6 left-6 z-10 pointer-events-none">
               <WaxSeal label={product.sold ? "Found Home" : "One of One"} />
@@ -162,6 +166,7 @@ export default function ProductDetail({ product, onClose }) {
                     href={links.depop}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackDepopClick(product.id)}
                     className="flex-1 inline-flex items-center justify-center px-6 py-3 rounded-full bg-labradorite hover:bg-labradorite-light text-cream font-medium"
                   >
                     Shop on Depop
