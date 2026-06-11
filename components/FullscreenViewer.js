@@ -450,18 +450,6 @@ export default function FullscreenViewer({ media = [], startIndex = 0, alt = "",
         </div>
       )}
 
-      {/* Hint text */}
-      {items.length > 1 && zoom === 1 && dragY === 0 && (
-        <p
-          className="absolute left-0 right-0 text-center text-[10px] uppercase tracking-[0.22em] text-parchment/40 pointer-events-none z-10"
-          style={{ bottom: "calc(2.5rem + env(safe-area-inset-bottom))" }}
-        >
-          <span className="md:hidden">swipe · pinch · swipe down to close</span>
-          <span className="hidden md:inline">
-            scroll to zoom · drag to pan · ← → to navigate · esc to close
-          </span>
-        </p>
-      )}
     </div>
   );
 }
