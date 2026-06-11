@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+import { PayPalScriptProvider, PayPalButtons, FUNDING } from "@paypal/react-paypal-js";
 import {
   createPayPalOrder,
   capturePayPalOrder,
@@ -55,9 +55,19 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
           "client-id": clientId,
           currency: product.currency || "USD",
           intent: "capture",
+          // Show only the main PayPal button. PayPal SDK otherwise renders
+          // additional rows for Pay Later, Debit/Credit Card, Venmo, etc.
+          // (and a "Powered by PayPal" line beneath the card button).
+          "disable-funding": "paylater,card,credit,venmo,bancontact,blik,eps,giropay,ideal,mercadopago,mybank,p24,sepa,sofort",
         }}
       >
         <PayPalButtons
+          // Force ONLY the PayPal button — no Pay Later, no Debit/Credit
+          // Card row, no Venmo, no regional alternates. Per Codex: more
+          // robust than maintaining an exclusion list, since available
+          // funding varies by country. disable-funding above is defense
+          // in depth in case PayPal ever ships a new source.
+          fundingSource={FUNDING.PAYPAL}
           style={{
             layout: "vertical",
             color: "gold",

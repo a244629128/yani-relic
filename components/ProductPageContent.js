@@ -3,8 +3,6 @@
 import WaxSeal from "@/components/decor/WaxSeal";
 import ProductGallery from "@/components/ProductGallery";
 import PayPalCheckoutButton from "@/components/PayPalCheckoutButton";
-import { links } from "@/data/products";
-import { trackMailtoClick } from "@/lib/analytics";
 
 /**
  * Body of the /shop/[id] page. The page itself is a server component;
@@ -85,51 +83,25 @@ export default function ProductPageContent({ product, paypalClientId }) {
             <span className="text-xs text-cream-dim/70">{product.currency}</span>
           </div>
 
-          {/* Buy CTAs — PayPal primary, Message to Claim secondary. No Depop. */}
+          {/* Buy CTA — PayPal only. Message to Claim removed per user. */}
           {product.sold ? (
             <div className="parchment-soft text-ink rounded-sm p-4 text-sm italic font-serif text-center">
               This one has found her person. Hush.
             </div>
           ) : (
-            <>
-              {paypalClientId && (
-                <div className="mb-4">
-                  <PayPalCheckoutButton product={product} clientId={paypalClientId} />
-                </div>
-              )}
-              {/* Desktop secondary: inline. Mobile has the sticky bottom bar below. */}
-              <div className="hidden md:block">
-                <a
-                  href={`mailto:${links.email}?subject=Message to claim: ${encodeURIComponent(product.name)}`}
-                  onClick={() => trackMailtoClick(product.id)}
-                  className="inline-flex items-center justify-center w-full px-4 py-2 rounded-full border border-brass/40 text-cream-dim hover:border-labradorite-light hover:text-labradorite-glow transition-colors text-[12px]"
-                >
-                  Message to Claim
-                </a>
+            paypalClientId && (
+              <div
+                // isolation:isolate creates a fresh stacking context so the
+                // PayPal SDK's iframe / overlays can't escape and overlap the
+                // sticky header / banner on scroll.
+                className="relative z-0 isolate"
+              >
+                <PayPalCheckoutButton product={product} clientId={paypalClientId} />
               </div>
-            </>
+            )
           )}
         </div>
       </div>
-
-      {/* Mobile sticky bottom bar — Message to Claim only.
-          PayPal button stays inline in the scroll because it's too tall to be sticky.
-          On md+ the global MobileActionBar is hidden via Tailwind; on mobile we
-          also hide MobileActionBar on /shop/r-* via app/layout.js. */}
-      {!product.sold && (
-        <div
-          className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-moss/95 backdrop-blur-md border-t border-brass/30 px-4 py-3"
-          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
-        >
-          <a
-            href={`mailto:${links.email}?subject=Message to claim: ${encodeURIComponent(product.name)}`}
-            onClick={() => trackMailtoClick(product.id)}
-            className="inline-flex items-center justify-center w-full px-6 py-3 rounded-full border border-brass/70 text-cream font-medium"
-          >
-            Message to Claim
-          </a>
-        </div>
-      )}
     </article>
   );
 }
