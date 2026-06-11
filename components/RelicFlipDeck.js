@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BLUR_DATA_URL } from "@/data/products";
+import { trackFlipDeckClaim } from "@/lib/analytics";
 
 const DESKTOP_DECK_SIZE = 5;
 const MOBILE_DECK_SIZE = 3;
@@ -468,7 +469,10 @@ function FrontCard({ relic }) {
         </p>
         <Link
           href={`/shop/${relic.id}`}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            trackFlipDeckClaim(relic.id);
+          }}
           className="inline-block mt-2 text-[10px] sm:text-[10px] uppercase tracking-[0.18em] text-labradorite-light hover:text-labradorite-glow"
         >
           Claim →

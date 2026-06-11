@@ -20,6 +20,7 @@ const ALLOWED_EVENTS = new Set([
   "mailto_click",
   "mailto_click_general",
   "image_zoom",
+  "flip_deck_claim",
 ]);
 const GENERAL_EVENTS = new Set(["depop_click_general", "mailto_click_general"]);
 const MAX_DURATION = 5 * 60 * 1000; // 5 minutes; matches DB constraint

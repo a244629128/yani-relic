@@ -6,6 +6,7 @@ import {
   formatShippingAddress,
 } from "@/lib/orders-db";
 import MarkSoldButton from "../_components/MarkSoldButton";
+import MarkUnsoldButton from "../_components/MarkUnsoldButton";
 import MarkedRefundedButton from "../_components/MarkedRefundedButton";
 
 export const dynamic = "force-dynamic";
@@ -81,8 +82,13 @@ export default async function AdminOrdersPage() {
         <ul className="space-y-3">
           {orders.map((o) => {
             const shipping = formatShippingAddress(o.shipping_address);
-            const showMarkSold = o.status === "captured" && !o.sold_marked;
+            // The product's actual sold flag is the truth (Phase 2B auto-sets
+            // it after capture). The order's sold_marked column is now just
+            // legacy tracking — we branch the button purely on productSold.
             const isOversold = o.status === "oversold";
+            const isCaptured = o.status === "captured";
+            const showMarkSold = isCaptured && o.productSold === false;
+            const showMarkUnsold = isCaptured && o.productSold === true;
             return (
               <li
                 key={o.id}
@@ -150,6 +156,9 @@ export default async function AdminOrdersPage() {
                   </div>
                   {showMarkSold && (
                     <MarkSoldButton orderId={o.id} productName={o.productName} />
+                  )}
+                  {showMarkUnsold && (
+                    <MarkUnsoldButton orderId={o.id} productName={o.productName} />
                   )}
                   {isOversold && (
                     <MarkedRefundedButton

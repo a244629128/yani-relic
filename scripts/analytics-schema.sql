@@ -3,13 +3,14 @@
 -- =====================================================================
 -- Run this in the Supabase SQL editor (one-time setup).
 --
--- Stores six low-cardinality event types:
+-- Stores seven low-cardinality event types:
 --   - 'view'                  : product modal/detail opened. duration_ms recorded on close.
 --   - 'depop_click'           : per-relic "Shop on Depop" CTA clicked (modal / flip deck).
 --   - 'depop_click_general'   : site-wide Depop link (footer / header / hero). product_id NULL.
 --   - 'mailto_click'          : per-relic "Message to Claim" CTA clicked.
 --   - 'mailto_click_general'  : site-wide mailto link (footer / contact). product_id NULL.
 --   - 'image_zoom'            : fullscreen viewer opened on a product (engaged-view proxy).
+--   - 'flip_deck_claim'       : "Claim →" clicked on a face-up flip-deck card (homepage).
 --
 -- session_id is an anonymous UUID generated in the browser and stored in
 -- localStorage. No PII. No third-party tracking.
@@ -32,7 +33,8 @@ CREATE TABLE IF NOT EXISTS product_events (
       'depop_click_general',
       'mailto_click',
       'mailto_click_general',
-      'image_zoom'
+      'image_zoom',
+      'flip_deck_claim'
     )),
 
   -- General clicks (Depop OR mailto) have NULL product_id; per-product events
