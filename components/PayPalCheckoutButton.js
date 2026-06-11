@@ -20,16 +20,19 @@ import { getSessionId } from "@/lib/analytics";
  *   clientId: PayPal publishable client id (server-injected)
  *   onSuccess?: optional callback for parent to react (e.g. show thanks)
  */
-// Safari (iOS or macOS) revokes the user-activation token while we're
-// awaiting our async createPayPalOrder, which makes the SDK's popup
-// open get blocked silently. The browser flashes and returns to the
-// same page with no popup. Workaround per Codex review: detect Safari
-// and use a full-page redirect to PayPal's approve URL instead of the
-// SDK button's popup mechanism.
-function isSafari() {
+// iOS Safari ONLY (not macOS Safari, not Chrome on iOS, not other
+// browsers). iOS Safari has the strictest user-activation policy: it
+// revokes the gesture token while we await our async createPayPalOrder,
+// so window.open() inside the SDK gets silently blocked. macOS Safari
+// preserves the token across the same await. Touch-capability is the
+// cleanest separator — macOS Safari has 0 touch points, iOS/iPadOS
+// Safari has > 0.
+function isTouchSafari() {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
-  return /Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS/.test(ua);
+  const isSafari = /Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS/.test(ua);
+  const hasTouch = (navigator.maxTouchPoints || 0) > 0;
+  return isSafari && hasTouch;
 }
 
 export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
@@ -40,10 +43,11 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
   const [manualReviewOrderId, setManualReviewOrderId] = useState(null);
   const [useSafariRedirect, setUseSafariRedirect] = useState(false);
 
-  // Detect Safari client-side only (SSR is uniform, JS lights up after
-  // hydration). Avoid render mismatch by starting `false` and flipping.
+  // Detect iOS Safari client-side only (SSR is uniform, JS lights up
+  // after hydration). Avoid render mismatch by starting `false` and
+  // flipping. macOS Safari + Chrome / Firefox / Edge get the SDK popup.
   useEffect(() => {
-    if (isSafari()) setUseSafariRedirect(true);
+    if (isTouchSafari()) setUseSafariRedirect(true);
   }, []);
 
   // Q3 (Codex re-review): if client navigation hangs, fall back to hard
