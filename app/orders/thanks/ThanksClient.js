@@ -279,14 +279,7 @@ function SuccessView({ order, product }) {
             <li className="flex gap-3">
               <span className="text-labradorite-light shrink-0">·</span>
               <span>
-                I&apos;ll wrap her by hand over the next 2–3 days — wax seal,
-                hand-written note, the works.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-labradorite-light shrink-0">·</span>
-              <span>
-                You&apos;ll get a follow-up email from me when she ships with
+                I&apos;ll wrap her by hand over the next 24 hours, You&apos;ll get a follow-up email from me when she ships with
                 tracking details.
               </span>
             </li>
