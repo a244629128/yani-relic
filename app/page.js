@@ -6,8 +6,10 @@ import RelicFlipDeck from "@/components/RelicFlipDeck";
 import Sparkles from "@/components/decor/Sparkles";
 import MoonPhaseDivider from "@/components/decor/MoonPhaseDivider";
 import { links } from "@/data/products";
+import { getProducts } from "@/lib/products-db";
 
-export default function Home() {
+export default async function Home() {
+  const products = await getProducts();
   return (
     <>
       <Header />
@@ -68,7 +70,7 @@ export default function Home() {
 
         {/* === FLIP DECK === Moved out of hero, becomes its own section. */}
         <section className="relative mx-auto max-w-5xl px-5 sm:px-8 py-10 md:py-20">
-          <RelicFlipDeck accent="gold" />
+          <RelicFlipDeck products={products} accent="gold" />
         </section>
 
         {/* === FEATURE CARDS === */}

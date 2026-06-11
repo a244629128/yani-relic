@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { products, links, BLUR_DATA_URL } from "@/data/products";
+import { links, BLUR_DATA_URL } from "@/data/products";
 
 const DESKTOP_DECK_SIZE = 5;
 const MOBILE_DECK_SIZE = 3;
@@ -26,6 +26,7 @@ const SYMBOLS = ["moon", "sun", "star", "eye", "hand"];
  * Desktop: 5-column grid.
  */
 export default function RelicFlipDeck({
+  products = [],
   subtitle = "Choose a card and see which relic is calling to you.",
   accent = "gold",
 }) {
@@ -37,10 +38,11 @@ export default function RelicFlipDeck({
   const [isMobile, setIsMobile] = useState(false);
 
   const pickRandom = useCallback((excludeIds = []) => {
+    if (!products.length) return null;
     const pool = products.filter((p) => !excludeIds.includes(p.id));
     const fromPool = pool.length > 0 ? pool : products;
     return fromPool[Math.floor(Math.random() * fromPool.length)];
-  }, []);
+  }, [products]);
 
   // Detect mobile via matchMedia; on change, trim/expand the deck.
   useEffect(() => {
@@ -60,7 +62,7 @@ export default function RelicFlipDeck({
       const used = [];
       return Array.from({ length: deckSize }).map(() => {
         const product = pickRandom(used);
-        used.push(product.id);
+        if (product) used.push(product.id);
         return { product, isFlipped: false };
       });
     });
@@ -75,6 +77,7 @@ export default function RelicFlipDeck({
           .map((c, idx) => (idx !== i && c.isFlipped && c.product ? c.product.id : null))
           .filter(Boolean);
         const newProduct = pickRandom(otherFaceUpIds);
+        if (!newProduct) return prev;
         const next = [...prev];
         next[i] = { product: newProduct, isFlipped: true };
         return next;
@@ -92,7 +95,7 @@ export default function RelicFlipDeck({
         const used = [];
         return prev.map(() => {
           const product = pickRandom(used);
-          used.push(product.id);
+          if (product) used.push(product.id);
           return { product, isFlipped: false };
         });
       });
