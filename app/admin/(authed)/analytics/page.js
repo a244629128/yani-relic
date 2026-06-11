@@ -2,20 +2,25 @@ import Link from "next/link";
 import {
   getProductStats,
   getRecentActivity,
+  getDailyStatsForMonth,
   formatDwell,
   formatPct,
 } from "@/lib/analytics-db";
+import { parseMonthParam } from "@/lib/date-helpers";
 import ResetAllAnalyticsButton from "../_components/ResetAllAnalyticsButton";
+import CalendarHeatmap from "../_components/CalendarHeatmap";
 
 export const dynamic = "force-dynamic"; // analytics is always live
 
 export default async function AnalyticsPage({ searchParams }) {
   const params = await searchParams;
   const days = Number(params?.days) === 7 ? 7 : 30;
+  const { year, month } = parseMonthParam(params?.month);
 
-  const [{ stats, totals }, recent] = await Promise.all([
+  const [{ stats, totals }, recent, monthData] = await Promise.all([
     getProductStats({ days }),
     getRecentActivity({ hours: 24 }),
+    getDailyStatsForMonth({ year, month }),
   ]);
 
   const hasAny =
@@ -48,6 +53,9 @@ export default async function AnalyticsPage({ searchParams }) {
         <EmptyState />
       ) : (
         <>
+          {/* === Calendar heatmap === */}
+          <CalendarHeatmap year={year} month={month} monthData={monthData} />
+
           {/* === Totals tiles === */}
           <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-8">
             <Tile label="Total views" value={totals.views} />
