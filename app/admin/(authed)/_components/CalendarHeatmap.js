@@ -90,6 +90,10 @@ export default function CalendarHeatmap({ year, month, monthData }) {
     <section className="mb-10">
       <h2 className="text-cream font-chancery text-2xl mb-3">Daily activity</h2>
 
+      {/* Calendar widget — constrained width so cells stay compact;
+          drill-down panel below opens to full section width. */}
+      <div className="max-w-md">
+
       {/* Month nav */}
       <div className="flex items-center justify-between mb-3 bg-forest/40 border border-parchment/15 rounded-md px-3 py-2">
         <Link
@@ -147,7 +151,7 @@ export default function CalendarHeatmap({ year, month, monthData }) {
         {WEEKDAY_HEADERS.map((d, i) => (
           <div
             key={i}
-            className="text-[10px] uppercase tracking-[0.18em] text-cream-dim/60"
+            className="text-xs uppercase tracking-[0.18em] text-cream-dim/60"
           >
             {d}
           </div>
@@ -189,7 +193,7 @@ export default function CalendarHeatmap({ year, month, monthData }) {
               style={!disabled ? { backgroundColor: baseColor } : undefined}
             >
               <span
-                className={`text-[11px] ${
+                className={`text-base font-medium leading-none ${
                   disabled ? "text-cream-dim/30" : "text-cream"
                 }`}
               >
@@ -197,8 +201,8 @@ export default function CalendarHeatmap({ year, month, monthData }) {
               </span>
               {count > 0 && (
                 <span
-                  className={`text-[9px] tabular-nums leading-none ${
-                    disabled ? "text-cream-dim/30" : "text-cream/80"
+                  className={`text-xs tabular-nums leading-none mt-0.5 ${
+                    disabled ? "text-cream-dim/30" : "text-cream/85"
                   }`}
                 >
                   {count}
@@ -209,7 +213,8 @@ export default function CalendarHeatmap({ year, month, monthData }) {
         })}
       </div>
 
-      {/* Inline drill-down panel */}
+      </div>
+      {/* Inline drill-down panel — full section width below the constrained calendar */}
       {selectedDay && selected && (
         <DayDrillDown date={selectedDay} data={selected} metric={metric} />
       )}
