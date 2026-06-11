@@ -167,6 +167,7 @@ export default function ProductGallery({ media, images = [], alt = "" }) {
       {/* === MAIN MEDIA === */}
       <div
         className="relative aspect-square overflow-hidden bg-ink/40 select-none"
+        style={{ touchAction: "pan-y" }}
         onTouchStart={(e) => {
           onZoomTouchStart(e);
           if (zoom === 1 && e.touches.length === 1) onTouchStart(e);

@@ -183,6 +183,7 @@ export default function FullscreenViewer({ media = [], startIndex = 0, alt = "",
 
       <div
         className="absolute inset-0 flex items-center justify-center"
+        style={{ touchAction: "none" }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
