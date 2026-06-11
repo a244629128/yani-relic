@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { createPayPalOrder, capturePayPalOrder } from "@/lib/paypal-actions";
+import {
+  createPayPalOrder,
+  capturePayPalOrder,
+  voidPayPalOrder,
+} from "@/lib/paypal-actions";
 
 /**
  * PayPal Smart Button. Renders a PayPal-branded checkout button that
@@ -89,9 +93,17 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
             console.error("[PayPal] onError:", err);
             setStatus("error");
             setError("PayPal hit an error. Please try again.");
+            // Best-effort: free the slot so a retry isn't blocked.
+            if (err?.orderID || err?.order_id) {
+              voidPayPalOrder(err.orderID || err.order_id).catch(() => {});
+            }
           }}
-          onCancel={() => {
+          onCancel={(data) => {
             setStatus("idle");
+            // User closed the popup without paying — free the slot.
+            if (data?.orderID) {
+              voidPayPalOrder(data.orderID).catch(() => {});
+            }
           }}
         />
       </PayPalScriptProvider>
