@@ -3,6 +3,8 @@
 import WaxSeal from "@/components/decor/WaxSeal";
 import ProductGallery from "@/components/ProductGallery";
 import PayPalCheckoutButton from "@/components/PayPalCheckoutButton";
+import { links } from "@/data/products";
+import { trackDepopClick } from "@/lib/analytics";
 
 /**
  * Body of the /shop/[id] page. The page itself is a server component;
@@ -83,22 +85,33 @@ export default function ProductPageContent({ product, paypalClientId }) {
             <span className="text-xs text-cream-dim/70">{product.currency}</span>
           </div>
 
-          {/* Buy CTA — PayPal only. Message to Claim removed per user. */}
+          {/* Buy CTAs — PayPal primary, Shop on Depop secondary. */}
           {product.sold ? (
             <div className="parchment-soft text-ink rounded-sm p-4 text-sm italic font-serif text-center">
               This one has found her person. Hush.
             </div>
           ) : (
-            paypalClientId && (
-              <div
-                // isolation:isolate creates a fresh stacking context so the
-                // PayPal SDK's iframe / overlays can't escape and overlap the
-                // sticky header / banner on scroll.
-                className="relative z-0 isolate"
+            <>
+              {paypalClientId && (
+                <div
+                  // isolation:isolate creates a fresh stacking context so the
+                  // PayPal SDK's iframe / overlays can't escape and overlap the
+                  // sticky header / banner on scroll.
+                  className="relative z-0 isolate mb-3"
+                >
+                  <PayPalCheckoutButton product={product} clientId={paypalClientId} />
+                </div>
+              )}
+              <a
+                href={links.depop}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackDepopClick(product.id)}
+                className="inline-flex items-center justify-center w-full px-4 py-2 rounded-full border border-brass/40 text-cream-dim hover:border-labradorite-light hover:text-labradorite-glow transition-colors text-[12px]"
               >
-                <PayPalCheckoutButton product={product} clientId={paypalClientId} />
-              </div>
-            )
+                Shop on Depop
+              </a>
+            </>
           )}
         </div>
       </div>
