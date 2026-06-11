@@ -15,6 +15,12 @@ const csp = [
   "connect-src 'self' https://*.supabase.co https://www.paypal.com https://www.sandbox.paypal.com" +
     (isDev ? " ws: http: https:" : ""),
   "frame-src https://www.tiktok.com https://www.depop.com https://www.paypal.com https://www.sandbox.paypal.com",
+  // Safari treats popups + frames slightly differently; PayPal SDK
+  // sometimes uses child workers in iframes. Mirror frame-src for
+  // both child-src and worker-src so Safari has nothing to complain
+  // about. blob: is needed by PayPal SDK for some worker setups.
+  "child-src https://www.paypal.com https://www.sandbox.paypal.com",
+  "worker-src 'self' blob:",
   "frame-ancestors 'none'",
   // PayPal mobile sometimes uses a same-window form submission as a
   // popup fallback. Block-by-default would break checkout silently

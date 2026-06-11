@@ -20,12 +20,31 @@ import { getSessionId } from "@/lib/analytics";
  *   clientId: PayPal publishable client id (server-injected)
  *   onSuccess?: optional callback for parent to react (e.g. show thanks)
  */
+// Safari (iOS or macOS) revokes the user-activation token while we're
+// awaiting our async createPayPalOrder, which makes the SDK's popup
+// open get blocked silently. The browser flashes and returns to the
+// same page with no popup. Workaround per Codex review: detect Safari
+// and use a full-page redirect to PayPal's approve URL instead of the
+// SDK button's popup mechanism.
+function isSafari() {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  return /Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS/.test(ua);
+}
+
 export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
   const router = useRouter();
   const [status, setStatus] = useState("idle"); // idle | working | redirecting | manual_review | error
   const [error, setError] = useState("");
   const [targetUrl, setTargetUrl] = useState(null);
   const [manualReviewOrderId, setManualReviewOrderId] = useState(null);
+  const [useSafariRedirect, setUseSafariRedirect] = useState(false);
+
+  // Detect Safari client-side only (SSR is uniform, JS lights up after
+  // hydration). Avoid render mismatch by starting `false` and flipping.
+  useEffect(() => {
+    if (isSafari()) setUseSafariRedirect(true);
+  }, []);
 
   // Q3 (Codex re-review): if client navigation hangs, fall back to hard
   // navigation. Using a useEffect with cleanup is more robust than a
@@ -102,6 +121,18 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
           Your money is safe.
         </p>
       </div>
+    );
+  }
+
+  if (useSafariRedirect) {
+    return (
+      <SafariRedirectButton
+        product={product}
+        onError={(msg) => {
+          setStatus("error");
+          setError(msg);
+        }}
+      />
     );
   }
 
@@ -221,5 +252,76 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
         <p className="text-rose-300 text-xs italic mt-2 text-center">{error}</p>
       )}
     </div>
+  );
+}
+
+/**
+ * Safari fallback: a PayPal-branded button that, when clicked, hits our
+ * server action to create the order, then does a FULL PAGE REDIRECT to
+ * PayPal's approve URL. No popup, no user-gesture-token requirement.
+ *
+ * PayPal redirects back to /paypal/return after approval, where we
+ * capture server-side and forward to /orders/thanks.
+ *
+ * Visual approximation of the official PayPal button — PayPal Yellow
+ * (#FFC439) pill with the "PayPal" wordmark in PayPal Blue (#003087).
+ */
+function SafariRedirectButton({ product, onError }) {
+  const [busy, setBusy] = useState(false);
+
+  const onClick = async () => {
+    setBusy(true);
+    const sessionId = getSessionId();
+    const res = await createPayPalOrder(product.id, sessionId);
+    if (!res.ok) {
+      setBusy(false);
+      onError?.(res.error || "Could not start checkout");
+      return;
+    }
+    if (!res.approveUrl) {
+      setBusy(false);
+      onError?.("PayPal did not return an approval URL — please try again.");
+      return;
+    }
+    // Full-page redirect to PayPal. The browser keeps the user-gesture
+    // intact for navigation (unlike window.open which needs the gesture
+    // token Safari already revoked).
+    window.location.href = res.approveUrl;
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      className="w-full h-12 rounded-full bg-[#FFC439] hover:bg-[#FFCF1F] active:bg-[#F2BB30] disabled:opacity-60 flex items-center justify-center gap-1 font-semibold text-[#003087] shadow-sm transition-colors"
+      aria-label="Pay with PayPal"
+    >
+      {busy ? (
+        <span className="text-sm">Connecting to PayPal…</span>
+      ) : (
+        <>
+          {/* PayPal-style wordmark — two overlapping "P" letterforms in
+              their canonical colors, then "Pay" + "Pal" wordmark text. */}
+          <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
+            <path
+              fill="#003087"
+              d="M7.4 21.5h2.7c.4 0 .7-.3.8-.7l.7-3.7c.1-.4.4-.7.8-.7h1.7c3.5 0 6.2-1.7 6.9-5.4.5-2.6-.4-4.4-2.3-5.3-.3-.1-.6-.2-1-.3-.7-.2-1.5-.3-2.5-.3H10.4c-.4 0-.8.3-.9.7L7.4 21.5z"
+            />
+            <path
+              fill="#009CDE"
+              d="M19.7 9.3c-.3 2.1-1.9 3.4-4.3 3.4h-1.5c-.3 0-.5.2-.6.5l-.7 4.3-.2 1.1c0 .2.1.4.4.4h2.3c.3 0 .6-.2.6-.5l.6-3.6c0-.3.3-.5.6-.5h.4c2.8 0 5-1.6 5.6-4.8.3-1.3.1-2.4-.5-3.2-.6-.8-.4-.6-.4-.6-.1.2-.2.3-.3 1.5z"
+            />
+          </svg>
+          <span className="text-base">
+            Pay with{" "}
+            <span className="italic font-bold">
+              <span className="text-[#003087]">Pay</span>
+              <span className="text-[#009CDE]">Pal</span>
+            </span>
+          </span>
+        </>
+      )}
+    </button>
   );
 }
