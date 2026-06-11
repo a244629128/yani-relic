@@ -93,10 +93,10 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
         <p className="text-cream-dim/80 text-xs italic mt-2">
           Write to{" "}
           <a
-            href={`mailto:hello@yanirelics.com?subject=${encodeURIComponent(`Order needs reconciliation: ${manualReviewOrderId || ""}`)}`}
+            href={`mailto:yanirelics@gmail.com?subject=${encodeURIComponent(`Order needs reconciliation: ${manualReviewOrderId || ""}`)}`}
             className="text-labradorite-light hover:text-labradorite-glow underline underline-offset-2"
           >
-            hello@yanirelics.com
+            yanirelics@gmail.com
           </a>{" "}
           with the order ID above and we&apos;ll confirm or refund within a day.
           Your money is safe.

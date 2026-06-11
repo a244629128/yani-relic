@@ -284,13 +284,6 @@ function SuccessView({ order, product }) {
               </span>
             </li>
           </ul>
-
-          <p className="text-cream-dim/80 italic text-sm mt-5 pt-4 border-t border-parchment/15">
-            <strong className="not-italic text-cream-dim">Care note:</strong>{" "}
-            Labradorite likes soft cloth and dim drawers. Avoid prolonged
-            sunlight on the cord. If she dulls, a damp cloth and a slow polish
-            with a soft towel brings the flash back.
-          </p>
         </div>
       )}
 

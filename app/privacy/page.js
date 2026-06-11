@@ -59,7 +59,7 @@ export default function PrivacyPage() {
 
             <h2 className="font-chancery text-2xl text-parchment pt-4">Questions</h2>
             <p>
-              Write to <a href="mailto:hello@yanirelics.com" className="text-labradorite-light hover:text-labradorite-glow underline underline-offset-2">hello@yanirelics.com</a>.
+              Write to <a href="mailto:yanirelics@gmail.com" className="text-labradorite-light hover:text-labradorite-glow underline underline-offset-2">yanirelics@gmail.com</a>.
             </p>
 
             <p className="text-cream-dim/70 italic text-base pt-6">
