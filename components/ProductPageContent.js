@@ -79,7 +79,7 @@ export default function ProductPageContent({ product, paypalClientId }) {
           </dl>
 
           <div className="flex items-baseline gap-3 flex-wrap mb-6">
-            {product.onSale ? (
+            {product.onSale && !product.sold ? (
               <>
                 <span className="font-chancery text-5xl text-rose-400">
                   ${product.salePrice}
@@ -94,7 +94,9 @@ export default function ProductPageContent({ product, paypalClientId }) {
               </>
             ) : (
               <>
-                <span className="font-chancery text-5xl text-labradorite-glow">
+                <span
+                  className={`font-chancery text-5xl ${product.sold ? "text-cream-dim" : "text-labradorite-glow"}`}
+                >
                   ${product.price}
                 </span>
                 <span className="text-xs text-cream-dim/70">{product.currency}</span>
