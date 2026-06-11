@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { links, BLUR_DATA_URL } from "@/data/products";
+import { trackDepopClick } from "@/lib/analytics";
 
 const DESKTOP_DECK_SIZE = 5;
 const MOBILE_DECK_SIZE = 3;
@@ -484,7 +485,10 @@ function FrontCard({ relic }) {
           href={links.depop}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            trackDepopClick(relic.id);
+          }}
           className="inline-block mt-2 text-[10px] sm:text-[10px] uppercase tracking-[0.18em] text-labradorite-light hover:text-labradorite-glow"
         >
           Claim →

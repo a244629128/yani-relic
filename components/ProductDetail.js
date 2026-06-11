@@ -193,6 +193,7 @@ export default function ProductDetail({ product, onClose }) {
               href={links.depop}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackDepopClick(product.id)}
               className="flex-1 inline-flex items-center justify-center px-6 py-3 rounded-full bg-labradorite hover:bg-labradorite-light text-cream font-medium"
             >
               Shop on Depop
