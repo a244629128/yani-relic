@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PayPalScriptProvider, PayPalButtons, FUNDING } from "@paypal/react-paypal-js";
 import {
@@ -24,22 +24,29 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
   const router = useRouter();
   const [status, setStatus] = useState("idle"); // idle | working | redirecting | manual_review | error
   const [error, setError] = useState("");
+  const [targetUrl, setTargetUrl] = useState(null);
+  const [manualReviewOrderId, setManualReviewOrderId] = useState(null);
 
-  // Q3: if router.push hangs (client-nav network blip after PayPal already
-  // captured the buyer's money), fall back to a hard navigation so the
-  // buyer doesn't sit on the "Taking you to your confirmation…" screen
-  // forever.
+  // Q3 (Codex re-review): if client navigation hangs, fall back to hard
+  // navigation. Using a useEffect with cleanup is more robust than a
+  // pathname check — if the component unmounts (= navigation succeeded
+  // and we left the page), the cleanup cancels the timer. If we're still
+  // mounted in 'redirecting' state after 3s, client nav didn't complete
+  // (whether URL changed or not), so we hard-navigate.
+  useEffect(() => {
+    if (status !== "redirecting" || !targetUrl) return;
+    const timer = setTimeout(() => {
+      if (typeof window !== "undefined") {
+        window.location.assign(targetUrl);
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [status, targetUrl]);
+
   const redirectToThanks = (paypalOrderId) => {
     const url = `/orders/thanks?o=${encodeURIComponent(paypalOrderId)}`;
+    setTargetUrl(url);
     router.push(url);
-    setTimeout(() => {
-      if (
-        typeof window !== "undefined" &&
-        !window.location.pathname.startsWith("/orders/thanks")
-      ) {
-        window.location.assign(url);
-      }
-    }, 2500);
   };
 
   if (!clientId) {
@@ -75,15 +82,23 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
           {error ||
             "Your payment was taken by PayPal, but our system needs to reconcile."}
         </p>
-        <p className="text-cream-dim/80 text-xs italic mt-3">
+        {manualReviewOrderId && (
+          <p className="text-cream-dim/80 text-[11px] uppercase tracking-[0.18em] mt-3">
+            Order ID:{" "}
+            <code className="font-mono text-cream-dim normal-case tracking-normal">
+              {manualReviewOrderId}
+            </code>
+          </p>
+        )}
+        <p className="text-cream-dim/80 text-xs italic mt-2">
           Write to{" "}
           <a
-            href="mailto:hello@yanirelics.com"
+            href={`mailto:hello@yanirelics.com?subject=${encodeURIComponent(`Order needs reconciliation: ${manualReviewOrderId || ""}`)}`}
             className="text-labradorite-light hover:text-labradorite-glow underline underline-offset-2"
           >
             hello@yanirelics.com
           </a>{" "}
-          with your PayPal receipt and we&apos;ll confirm or refund within a day.
+          with the order ID above and we&apos;ll confirm or refund within a day.
           Your money is safe.
         </p>
       </div>
@@ -161,6 +176,7 @@ export default function PayPalCheckoutButton({ product, clientId, onSuccess }) {
             // unambiguous support ask.
             if (res.manualReview) {
               setStatus("manual_review");
+              setManualReviewOrderId(data.orderID);
               setError(res.error || "Captured at PayPal — please contact us.");
               return;
             }
