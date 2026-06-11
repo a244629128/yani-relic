@@ -16,7 +16,10 @@ const csp = [
     (isDev ? " ws: http: https:" : ""),
   "frame-src https://www.tiktok.com https://www.depop.com https://www.paypal.com https://www.sandbox.paypal.com",
   "frame-ancestors 'none'",
-  "form-action 'self'",
+  // PayPal mobile sometimes uses a same-window form submission as a
+  // popup fallback. Block-by-default would break checkout silently
+  // (the "page flashes and nothing happens" symptom on iOS Safari).
+  "form-action 'self' https://www.paypal.com https://www.sandbox.paypal.com",
   "base-uri 'self'",
   "object-src 'none'",
   "upgrade-insecure-requests",
