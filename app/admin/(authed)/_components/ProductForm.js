@@ -16,6 +16,7 @@ const EMPTY = {
   description: "",
   fieldNote: "",
   cordType: "",
+  depopUrl: "",
   aspectRatio: 1.0,
   sold: false,
   featured: false,
@@ -134,6 +135,32 @@ export default function ProductForm({ initial, isNew }) {
           rows={2}
           className="w-full bg-forest/50 border border-parchment/35 rounded-md px-3 py-2 text-cream"
         />
+      </Field>
+
+      <Field label="Depop URL for this relic (optional)">
+        <input
+          type="url"
+          value={form.depopUrl ?? ""}
+          onChange={(e) => update({ depopUrl: e.target.value })}
+          placeholder="https://www.depop.com/products/glitchydollhaus-…/"
+          className="w-full bg-forest/50 border border-parchment/35 rounded-md px-3 py-2 text-cream text-sm"
+        />
+        <div className="flex items-center gap-3 mt-1">
+          <p className="text-cream-dim/60 text-[11px] italic leading-snug flex-1">
+            If left blank, the &quot;Shop on Depop&quot; button on the
+            product page falls back to your shop-wide Depop URL.
+          </p>
+          {form.depopUrl && /^https:\/\/(www\.)?depop\.com\//i.test(form.depopUrl) && (
+            <a
+              href={form.depopUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] uppercase tracking-[0.18em] text-labradorite-light hover:text-labradorite-glow shrink-0"
+            >
+              Open ↗
+            </a>
+          )}
+        </div>
       </Field>
 
       <div className="flex gap-6">

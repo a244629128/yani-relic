@@ -6,8 +6,8 @@
 
 export const links = {
   depop: "https://www.depop.com/glitchydollhaus/",
-  tiktok: "https://www.tiktok.com/@yanirelics",
-  instagram: "https://www.instagram.com/yanirelics",
+  tiktok: "https://www.tiktok.com/@glitchydollhaus",
+  instagram: "https://www.instagram.com/yanirelics/",
   email: "yanirelics@gmail.com",
 };
 

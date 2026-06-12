@@ -114,7 +114,7 @@ export default function ProductPageContent({ product, paypalClientId }) {
                 </div>
               )}
               <a
-                href={links.depop}
+                href={product.depopUrl || links.depop}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackDepopClick(product.id)}
