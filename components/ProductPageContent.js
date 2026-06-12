@@ -3,6 +3,7 @@
 import WaxSeal from "@/components/decor/WaxSeal";
 import ProductGallery from "@/components/ProductGallery";
 import PayPalCheckoutButton from "@/components/PayPalCheckoutButton";
+import FormattedDescription from "@/components/FormattedDescription";
 import { links } from "@/data/products";
 import { trackDepopClick } from "@/lib/analytics";
 
@@ -46,9 +47,7 @@ export default function ProductPageContent({ product, paypalClientId }) {
 
           <div className="hairline mb-6" />
 
-          <p className="leading-relaxed text-cream/90 mb-6">
-            {product.description}
-          </p>
+          <FormattedDescription text={product.description} className="mb-2" />
 
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm mb-8">
             <div>

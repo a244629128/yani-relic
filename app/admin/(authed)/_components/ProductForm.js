@@ -116,9 +116,15 @@ export default function ProductForm({ initial, isNew }) {
           value={form.description}
           onChange={(e) => update({ description: e.target.value })}
           required
-          rows={4}
-          className="w-full bg-forest/50 border border-parchment/35 rounded-md px-3 py-2 text-cream"
+          rows={10}
+          placeholder={`A pale labradorite, wrapped in antique brass wire.\n\n- Hand-wrapped pendant\n- Antique copper-tone wire\n- Blue-green flash under direct light\n- Comes on a black cord`}
+          className="w-full bg-forest/50 border border-parchment/35 rounded-md px-3 py-2 text-cream font-sans text-sm leading-relaxed"
         />
+        <p className="text-cream-dim/60 text-[11px] italic mt-1 leading-snug">
+          Formatting tips: blank line = new paragraph. Lines starting with{" "}
+          <code className="bg-forest/60 px-1 rounded">-</code> become bullet
+          points. Paragraphs + bullets can be mixed.
+        </p>
       </Field>
 
       <Field label="Field note (personal 1-2 sentence)">
