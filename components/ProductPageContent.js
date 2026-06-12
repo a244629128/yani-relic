@@ -60,13 +60,7 @@ export default function ProductPageContent({ product, paypalClientId }) {
               <dt className="text-brass-light text-[11px] uppercase tracking-[0.18em] mb-1">
                 Comes with
               </dt>
-              <dd>{product.cordType || "Cord / chain included"}</dd>
-            </div>
-            <div>
-              <dt className="text-brass-light text-[11px] uppercase tracking-[0.18em] mb-1">
-                Flash
-              </dt>
-              <dd>Blue-green under direct light</dd>
+              <dd>{product.cordType || 'Adjustable cord, 17-19"'}</dd>
             </div>
           </dl>
 
