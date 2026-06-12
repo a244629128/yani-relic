@@ -97,6 +97,16 @@ export default function ProductForm({ initial, isNew }) {
         </Field>
       </div>
 
+      <Field label='Cord / chain type (optional — defaults to: Adjustable cord, 17-19")'>
+        <input
+          type="text"
+          value={form.cordType}
+          onChange={(e) => update({ cordType: e.target.value })}
+          placeholder='e.g. Waxed cotton cord, adjustable to 24"'
+          className="w-full bg-forest/50 border border-parchment/35 rounded-md px-3 py-2 text-cream"
+        />
+      </Field>
+
       <Field label="Sale price (optional — leave blank for no sale)">
         <div className="flex items-center gap-3">
           <input
