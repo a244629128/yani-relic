@@ -115,13 +115,16 @@ export default function ProductPageContent({ product, paypalClientId }) {
                 className="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-full bg-[#ff2300] hover:bg-[#e01f00] text-white font-medium text-[13px] transition-colors shadow-[0_2px_8px_rgba(255,35,0,0.25)] hover:shadow-[0_3px_12px_rgba(255,35,0,0.35)]"
               >
                 <svg
-                  width="16"
-                  height="16"
+                  width="18"
+                  height="18"
                   viewBox="0 0 24 24"
                   fill="currentColor"
                   aria-hidden
                 >
-                  <path d="M3 3h7.5a7.5 7.5 0 0 1 0 15H7v3H3V3zm4 4v7h3.5a3.5 3.5 0 0 0 0-7H7z" />
+                  <path
+                    fillRule="evenodd"
+                    d="M4 3 h7 a9 9 0 0 1 0 18 H4 z M8 7 v10 h3 a5 5 0 0 0 0-10 z"
+                  />
                 </svg>
                 <span>Shop on Depop</span>
               </a>

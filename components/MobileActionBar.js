@@ -58,8 +58,11 @@ export default function MobileActionBar() {
 
 function DepopLogo() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M3 3h7.5a7.5 7.5 0 0 1 0 15H7v3H3V3zm4 4v7h3.5a3.5 3.5 0 0 0 0-7H7z" />
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path
+        fillRule="evenodd"
+        d="M4 3 h7 a9 9 0 0 1 0 18 H4 z M8 7 v10 h3 a5 5 0 0 0 0-10 z"
+      />
     </svg>
   );
 }
