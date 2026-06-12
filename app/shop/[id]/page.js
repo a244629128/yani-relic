@@ -45,7 +45,15 @@ export default async function ProductPage({ params }) {
   if (!product) notFound();
 
   const allProducts = await getProducts();
-  const paypalClientId = process.env.PAYPAL_CLIENT_ID || null;
+  // Toggle: set PAYPAL_DISABLED=true in Vercel env vars to hide the PayPal
+  // button while keeping all credentials in place. Default (env unset or
+  // set to anything other than "true") keeps PayPal enabled. Useful while
+  // PayPal account verification is in progress — the button vanishes, the
+  // Depop CTA stays, no code change needed.
+  const paypalClientId =
+    process.env.PAYPAL_DISABLED === "true"
+      ? null
+      : process.env.PAYPAL_CLIENT_ID || null;
 
   return (
     <>
