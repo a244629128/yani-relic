@@ -25,7 +25,6 @@ export default function Footer() {
               <li><Link href="/shop" className="hover:text-labradorite-light">Relics</Link></li>
               <li><Link href="/about" className="hover:text-labradorite-light">About</Link></li>
               <li><Link href="/contact" className="hover:text-labradorite-light">Contact</Link></li>
-              <li><Link href="/privacy" className="hover:text-labradorite-light">Privacy</Link></li>
             </ul>
           </div>
 

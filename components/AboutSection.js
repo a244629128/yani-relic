@@ -9,12 +9,11 @@ export default function AboutSection({ compact = false }) {
           About the Maker
         </p>
         <h2 className="font-chancery text-4xl sm:text-5xl text-cream text-center mb-5">
-          A small shop in a quiet kitchen.
+          Hi, I&apos;m Yani.
         </h2>
         <p className="text-cream-dim text-center leading-relaxed max-w-2xl mx-auto mb-8">
-          I&apos;m Yani. I wrap labradorite by hand in the evenings, mostly with the kettle on. Every piece
-          is one-of-one — same hands, same stones, but never the same flash twice. If a relic finds you, she was
-          meant to.
+          I make little labradorite pendants for people who like things that feel
+          a little mysterious, a little old, and a little hard to explain.
         </p>
         <div className="text-center">
           <a
@@ -37,26 +36,57 @@ export default function AboutSection({ compact = false }) {
         About the Maker
       </p>
       <h1 className="font-chancery text-5xl sm:text-7xl text-cream text-center mb-10">
-        I&apos;m Yani.
+        Hi, I&apos;m Yani.
       </h1>
 
       <div className="parchment rounded-sm p-8 sm:p-12 leading-relaxed font-serif text-lg space-y-5">
         <p>
-          I started wrapping labradorite because I couldn&apos;t stop picking up smooth stones on walks.
-          One night, after the kettle had clicked off twice, I sat down with a pair of pliers and a small
-          coil of antique brass wire, and I made the first one.
+          I make little labradorite pendants for people who like things that feel
+          a little mysterious, a little old, and a little hard to explain.
         </p>
+
         <p>
-          Everything I sell is made by my hands, one piece at a time, in a quiet kitchen. I work in the
-          evenings, mostly, when the windows have gone dark and the dog is asleep. I don&apos;t do batches.
-          I don&apos;t do duplicates. I find a stone, I sit with her for a while, and I wrap her in the
-          way she asks to be wrapped.
+          I&apos;ve always liked objects that look quiet at first, then suddenly
+          show you something when the light changes. That is what I love most
+          about labradorite. One second it looks dark and simple, and then it
+          flashes blue, green, gold, or this strange stormy glow that never
+          really looks the same twice.
         </p>
+
+        <p>That is the feeling I try to keep in every piece.</p>
+
         <p>
-          Every relic is one-of-one — same hands, same care, but the labradorite flash is never the same
-          twice. Some are river-pebble small. Some hold a wide blue ocean. They go to the people who need
-          them.
+          Each pendant is wrapped by hand, one at a time. I don&apos;t make
+          duplicates, and I don&apos;t really want them to feel too polished or
+          perfect. I like when a piece still feels like it has a little secret to
+          it, like something you found instead of something that came from a
+          factory.
         </p>
+
+        <p className="italic">
+          Some of them turn out soft and moonlit.
+          <br />
+          Some feel more like forest relics.
+          <br />
+          Some look like they belong in an old drawer, a spellbook, or around
+          the neck of someone who definitely has a favorite candle.
+        </p>
+
+        <p>
+          Most pieces come on a simple black cord so they are easy to wear right
+          away. Everything is packed by hand and shipped from Massachusetts.
+        </p>
+
+        <p>
+          Yani Relics is still small, and honestly, I like it that way. Every
+          piece gets its own name, its own mood, and its own tiny story before
+          it leaves me.
+        </p>
+
+        <p>Thank you for being here and looking closely.</p>
+
+        <p>Maybe one of them will feel like yours.</p>
+
         <p className="italic">— Yani</p>
       </div>
     </section>
