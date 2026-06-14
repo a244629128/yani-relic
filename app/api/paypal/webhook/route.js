@@ -203,7 +203,11 @@ export async function POST(req) {
     console.warn(
       `[paypal-webhook] OVERSOLD: order ${orderId} blocked by unique index. Flipping to 'oversold' for admin review.`
     );
-    const oversoldUpdates = { ...updates, status: "oversold" };
+    // Reset sold_marked when overriding to 'oversold' — the bundled
+    // sold_marked=true from the captured-attempt updates object would
+    // otherwise carry over, but an oversold row was never allocated to
+    // this buyer's product (the other captured row got it).
+    const oversoldUpdates = { ...updates, status: "oversold", sold_marked: false };
     const { error: oversoldErr } = await sb
       .from("paypal_orders")
       .update(oversoldUpdates)

@@ -1,14 +1,14 @@
 import { links } from "@/data/products";
 
 /**
- * 4 ornate feature cards: ONE OF ONE / HANDMADE / FOREST INSPIRED / FOLLOW THE MAGIC.
- * Shared across all 3 concept proposals.
+ * 3 ornate feature cards: HANDMADE / FOREST INSPIRED / FOLLOW THE MAGIC.
+ * 3-col grid at all sizes 360px+; single-column stack below 360px.
  *
  * Props:
  *   gap: tailwind gap class (defaults to "gap-4 sm:gap-5")
  *   variant: "tall" (3:5) | "square" (1:1) | "wide" (4:5)
  */
-export default function FeatureCardsRow({ gap = "gap-4 sm:gap-5", variant = "tall" }) {
+export default function FeatureCardsRow({ gap = "gap-4 sm:gap-5", variant = "wide" }) {
   const aspect = {
     tall: "aspect-[3/5]",
     wide: "aspect-[4/5]",
