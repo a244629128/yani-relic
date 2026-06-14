@@ -12,10 +12,11 @@ export default function Footer() {
 
         <div className="grid md:grid-cols-3 gap-10 mb-12 text-center md:text-left">
           <div>
-            <h3 className="font-serif text-2xl text-cream mb-3">Yani Relics</h3>
+            <h4 className="text-xs uppercase tracking-[0.22em] text-brass-light mb-4">
+              Refunds / Exchanges
+            </h4>
             <p className="text-sm leading-relaxed">
-              A small, slow shop of handmade labradorite pieces — wrapped one at a time, in a quiet
-              kitchen, with the kettle on.
+              We do not accept refunds or exchanges. All sales final.
             </p>
           </div>
 

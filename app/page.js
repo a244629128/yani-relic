@@ -71,7 +71,7 @@ export default async function Home() {
 
         {/* === FEATURE CARDS === */}
         <section className="relative mx-auto max-w-7xl px-5 sm:px-8 py-10 md:py-20">
-          <FeatureCardsRow variant="tall" />
+          <FeatureCardsRow variant="wide" />
         </section>
       </main>
       <Footer />

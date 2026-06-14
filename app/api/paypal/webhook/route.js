@@ -147,6 +147,13 @@ export async function POST(req) {
   const updates = { raw_payload: event };
   if (shouldUpdateStatus) {
     updates.status = targetStatus;
+    // Bundle sold_marked into the same UPDATE so the admin tracker stays
+    // consistent with products.sold (Phase 2B auto-mark). Only set on
+    // transitions to captured — refunds/voids deliberately don't touch
+    // sold_marked so an oversold/refunded row still shows historically.
+    if (targetStatus === "captured") {
+      updates.sold_marked = true;
+    }
   }
   if (capturePayloadId && !existing?.capture_id) {
     updates.capture_id = capturePayloadId;

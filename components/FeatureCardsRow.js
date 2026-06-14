@@ -17,11 +17,6 @@ export default function FeatureCardsRow({ gap = "gap-4 sm:gap-5", variant = "tal
 
   const cards = [
     {
-      title: "One of One",
-      body: "Each piece is unique,\njust like you.",
-      Icon: IconMoon,
-    },
-    {
       title: "Handmade",
       body: "Wrapped by hand\nwith intention.",
       Icon: IconHand,
@@ -39,19 +34,20 @@ export default function FeatureCardsRow({ gap = "gap-4 sm:gap-5", variant = "tal
     },
   ];
 
+  // 3-col grid on phones (360px+) and desktop. Sub-360px (iPhone SE)
+  // falls back to single-column vertical stack — Codex flagged that
+  // 3-cols at 320px would cramp each card to ~96px.
   return (
-    /* Mobile: horizontal swipe-strip with snap. Desktop (lg+): 4-col grid. */
-    <div className="overflow-x-auto lg:overflow-visible -mx-3 sm:mx-0 pb-3 lg:pb-0 snap-x snap-mandatory lg:snap-none no-scrollbar">
-      <div className={`flex lg:grid lg:grid-cols-4 ${gap} px-3 lg:px-0`}>
-        {cards.map((c, i) => (
-          <div
-            key={i}
-            className="flex-shrink-0 w-[60vw] max-w-[240px] lg:w-auto lg:max-w-none snap-center"
-          >
-            <FeatureCard card={c} aspect={aspect} />
-          </div>
-        ))}
-      </div>
+    <div
+      className={`grid grid-cols-3 max-[359px]:grid-cols-1 ${gap}`}
+    >
+      {cards.map((c, i) => (
+        <FeatureCard
+          key={i}
+          card={c}
+          aspect={`${aspect} max-[359px]:aspect-[5/3]`}
+        />
+      ))}
     </div>
   );
 }
@@ -153,18 +149,6 @@ function CornerOrnaments() {
         </svg>
       ))}
     </>
-  );
-}
-
-function IconMoon({ className }) {
-  return (
-    <svg viewBox="0 0 32 32" className={className} fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden>
-      <path
-        d="M22 20 A 9 9 0 1 1 12 6 A 6.5 6.5 0 0 0 22 20 Z"
-        fill="currentColor"
-        fillOpacity="0.6"
-      />
-    </svg>
   );
 }
 
