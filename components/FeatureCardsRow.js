@@ -1,7 +1,5 @@
-import { links } from "@/data/products";
-
 /**
- * 3 ornate feature cards: HANDMADE / FOREST INSPIRED / FOLLOW THE MAGIC.
+ * 3 ornate feature cards: HANDMADE / FOREST INSPIRED / ONE OF ONE.
  * 3-col grid at all sizes 360px+; single-column stack below 360px.
  *
  * Props:
@@ -27,10 +25,9 @@ export default function FeatureCardsRow({ gap = "gap-4 sm:gap-5", variant = "wid
       Icon: IconHerb,
     },
     {
-      title: "Follow the Magic",
-      body: "See behind the scenes\non TikTok.",
-      Icon: IconMoonStar,
-      cta: { label: "Follow on TikTok", href: links.tiktok },
+      title: "One of One",
+      body: "Each piece is unique,\njust like you.",
+      Icon: IconMoon,
     },
   ];
 
@@ -172,18 +169,13 @@ function IconHerb({ className }) {
   );
 }
 
-function IconMoonStar({ className }) {
+function IconMoon({ className }) {
   return (
     <svg viewBox="0 0 32 32" className={className} fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden>
       <path
         d="M22 20 A 9 9 0 1 1 12 6 A 6.5 6.5 0 0 0 22 20 Z"
         fill="currentColor"
-        fillOpacity="0.5"
-      />
-      <path
-        d="M24 9 L 25 11 L 27 12 L 25 13 L 24 15 L 23 13 L 21 12 L 23 11 Z"
-        fill="currentColor"
-        fillOpacity="0.7"
+        fillOpacity="0.6"
       />
     </svg>
   );

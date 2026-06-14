@@ -460,12 +460,9 @@ function FrontCard({ relic }) {
           }}
         />
       </div>
-      <div className="px-2 sm:px-3 py-3 text-center">
-        <p className="font-chancery text-cream text-[18px] sm:text-[20px] leading-tight">
+      <div className="px-2 sm:px-3 py-2 sm:py-3 text-center">
+        <p className="font-chancery text-cream text-[16px] sm:text-[17px] leading-tight">
           {relic.name}
-        </p>
-        <p className="text-[10px] sm:text-[10px] uppercase tracking-[0.18em] text-brass-light mt-1">
-          <span className="font-chancery normal-case tracking-normal text-[15px] text-labradorite-light">${relic.price}</span>
         </p>
         <Link
           href={`/shop/${relic.id}`}
@@ -473,7 +470,7 @@ function FrontCard({ relic }) {
             e.stopPropagation();
             trackFlipDeckClaim(relic.id);
           }}
-          className="inline-block mt-2 text-[10px] sm:text-[10px] uppercase tracking-[0.18em] text-labradorite-light hover:text-labradorite-glow"
+          className="inline-block mt-1.5 px-3 py-1.5 sm:px-2 sm:py-1 text-[12px] sm:text-[10px] uppercase tracking-[0.18em] text-labradorite-light hover:text-labradorite-glow"
         >
           Claim →
         </Link>

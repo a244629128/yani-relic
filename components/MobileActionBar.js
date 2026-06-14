@@ -41,11 +41,7 @@ export default function MobileActionBar() {
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => trackDepopClickGeneral("mobile-action-bar")}
-          className="flex items-center justify-center gap-2 rounded-[10px] py-2.5 text-[12px] uppercase tracking-[0.18em] text-cream"
-          style={{
-            background: "rgba(63, 143, 145, 0.85)",
-            border: "1px solid rgba(111, 198, 200, 0.4)",
-          }}
+          className="flex items-center justify-center gap-2 rounded-[10px] py-2.5 text-[12px] uppercase tracking-[0.18em] text-white bg-[#ff2300] hover:bg-[#e01f00] shadow-[0_2px_8px_rgba(255,35,0,0.25)] transition-colors"
           aria-label="Shop on Depop"
         >
           <DepopLogo />
