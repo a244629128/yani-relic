@@ -9,7 +9,8 @@
 // during render.
 
 import { NextResponse } from "next/server";
-import { capturePayPalOrder } from "@/lib/paypal-actions";
+import { capturePayPalOrder, capturePayPalBundleOrder } from "@/lib/paypal-actions";
+import { createAdminSupabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +27,29 @@ export async function GET(request) {
   // auth and gracefully handles "not paid yet" / "wrong session" /
   // "not found" cases. The webhook is the durability backstop if our
   // synchronous capture failed.
+  //
+  // Bundle detection: paypal_orders.product_id IS NULL marks a bundle row
+  // (see paypal-order-items.sql migration). Single-item rows keep the
+  // per-product id + use capturePayPalOrder; bundles use the bundle
+  // capture path which flips all pieces atomically.
   try {
-    await capturePayPalOrder(token);
+    let isBundle = false;
+    try {
+      const sb = createAdminSupabase();
+      const { data } = await sb
+        .from("paypal_orders")
+        .select("product_id")
+        .eq("id", token)
+        .maybeSingle();
+      isBundle = data ? data.product_id === null : false;
+    } catch (err) {
+      console.error("[paypal/return] bundle detection lookup failed:", err);
+    }
+    if (isBundle) {
+      await capturePayPalBundleOrder(token);
+    } else {
+      await capturePayPalOrder(token);
+    }
   } catch (err) {
     console.error("[paypal/return] capture threw:", err);
   }

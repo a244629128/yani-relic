@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 
 /**
  * Floating "back to top" button. Appears after scrolling past 800px.
- * Mobile only (md:hidden). Positioned above the sticky bottom action bar.
+ * Mobile only (md:hidden). Vertical stack from bottom up:
+ *   MobileActionBar → FloatingChatButton → SelectionBar → BackToTop.
+ * (SelectionBar only exists when the buyer has 1+ pieces picked.)
  */
 export default function BackToTop() {
   const [visible, setVisible] = useState(false);
@@ -25,7 +27,10 @@ export default function BackToTop() {
         visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
       }`}
       style={{
-        bottom: "calc(5.5rem + env(safe-area-inset-bottom))",
+        // Clear the FloatingChatButton (5.25rem) AND the SelectionBar
+        // (9.5rem, ~2.5rem tall). Slotting BackToTop above the pill so
+        // all four stack cleanly: bar → chat → selection → back-to-top.
+        bottom: "calc(13.5rem + env(safe-area-inset-bottom))",
       }}
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

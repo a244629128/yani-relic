@@ -139,6 +139,101 @@
   100%     { opacity: 0; stroke-dasharray: 80 0; stroke-dashoffset: -80; }
 }
 
+/* FloatingChatButton — layered breathing to draw the eye:
+     1. Halo ring pulses scale + opacity around the icon
+     2. Icon itself breathes (subtle scale)
+     3. Brass + teal box-shadow brightens with the breath (candlelight)
+     4. Two brass sparkles briefly twinkle at offset positions
+   All animations honor prefers-reduced-motion at the bottom of this block. */
+@keyframes chat-halo-pulse {
+  0%, 100% { transform: scale(1);    opacity: 0.45; }
+  50%      { transform: scale(1.08); opacity: 0.9; }
+}
+@keyframes chat-fab-breath {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.025); }
+}
+/* Glow aura — was originally a box-shadow animation on the button itself,
+   but per Codex post-ship review that triggered paint every frame (box-shadow
+   isn't compositor-promoted). Now lives on its own absolutely-positioned
+   span whose ONLY animated property is opacity — compositor handles it
+   cheaply, button keeps its static cached shadow. Same visual peak. */
+@keyframes chat-fab-aura-pulse {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 1; }
+}
+/* Sparkle "twinkle" — invisible most of the cycle, briefly visible near
+   the end. Two instances at different positions + delays so the eye
+   catches them at unpredictable moments. */
+@keyframes chat-fab-sparkle {
+  0%, 78%, 100% { opacity: 0; transform: scale(0.4); }
+  84%           { opacity: 1; transform: scale(1.4); }
+  92%           { opacity: 0.5; transform: scale(1); }
+}
+.chat-fab-button {
+  background: linear-gradient(135deg, #1a2520 0%, #0d1611 60%, #050a08 100%);
+  border: 1px solid rgba(181, 154, 104, 0.85);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.55),
+    0 0 18px rgba(63, 143, 145, 0.28),
+    inset 0 0 12px rgba(181, 154, 104, 0.10);
+}
+.chat-fab-halo {
+  position: absolute;
+  inset: -5px;
+  border-radius: 9999px;
+  border: 1px solid rgba(181, 154, 104, 0.35);
+  box-shadow: 0 0 22px rgba(63, 143, 145, 0.3);
+  pointer-events: none;
+  animation: chat-halo-pulse 2.8s ease-in-out infinite;
+}
+/* Aura layer — same size as the button. Its box-shadow paints the bright
+   glow ring; we animate only the layer's opacity so the box-shadow stays
+   cached on the GPU and the heavy paint never re-runs. */
+.chat-fab-aura {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+  box-shadow:
+    0 0 26px rgba(63, 143, 145, 0.58),
+    0 0 14px rgba(181, 154, 104, 0.50);
+  animation: chat-fab-aura-pulse 2.8s ease-in-out infinite;
+}
+.chat-fab-breath {
+  /* Only animate transform now — glow moved to the .chat-fab-aura layer. */
+  animation: chat-fab-breath 2.8s ease-in-out infinite;
+  transition: filter 200ms ease;
+}
+.chat-fab-breath:hover {
+  filter: brightness(1.15);
+}
+.chat-fab-sparkle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(232, 230, 210, 0.95) 0%,
+    rgba(181, 154, 104, 0.65) 45%,
+    rgba(181, 154, 104, 0) 100%
+  );
+  /* Slightly longer cycle than breath so the sparkles drift out of phase
+     with the breath/halo — keeps the eye guessing. */
+  animation: chat-fab-sparkle 6.2s ease-in-out infinite;
+}
+.chat-fab-sparkle--1 { top: -8px; right: 6px; }
+.chat-fab-sparkle--2 { bottom: 4px; left: -8px; animation-delay: 3.1s; }
+@media (prefers-reduced-motion: reduce) {
+  .chat-fab-halo,
+  .chat-fab-aura,
+  .chat-fab-breath,
+  .chat-fab-sparkle,
+  .animate-modal-up { animation: none; }
+}
+
 html, body {
   background-color: var(--color-forest);
   color: var(--color-cream);

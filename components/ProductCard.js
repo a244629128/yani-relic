@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import WaxSeal from "@/components/decor/WaxSeal";
 import HoverSparkleField from "@/components/decor/HoverSparkleField";
+import AddToOrderCheckbox from "@/components/AddToOrderCheckbox";
 import { BLUR_DATA_URL } from "@/data/products";
 
 // Universal card. `variant` switches between visual treatments.
@@ -131,6 +132,7 @@ export default function ProductCard({ product, variant = "grid", animation = "su
       style={animDelay}
     >
       <HoverSparkleField cardId={product.id} count={10} />
+      <AddToOrderCheckbox productId={product.id} sold={product.sold} />
       <Link
         href={href}
         aria-label={openAriaLabel}

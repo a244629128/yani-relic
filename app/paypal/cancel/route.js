@@ -10,6 +10,11 @@ export const dynamic = "force-dynamic";
 export async function GET(request) {
   const url = new URL(request.url);
   const productId = url.searchParams.get("p");
+  // Bundle cancels use ?p=bundle — send them back to the /checkout page
+  // where the selection is still in localStorage waiting.
+  if (productId === "bundle") {
+    return NextResponse.redirect(new URL("/checkout", url));
+  }
   return NextResponse.redirect(
     new URL(productId ? `/shop/${productId}` : "/shop", url)
   );

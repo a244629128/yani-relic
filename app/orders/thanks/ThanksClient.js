@@ -20,6 +20,7 @@ export default function ThanksClient({ orderId }) {
   const [state, setState] = useState({ phase: "loading" }); // loading | ok | wrong_session | not_paid | not_found | missing
   const [order, setOrder] = useState(null);
   const [product, setProduct] = useState(null);
+  const [products, setProducts] = useState([]);
 
   useEffect(() => {
     if (!orderId) {
@@ -39,6 +40,7 @@ export default function ThanksClient({ orderId }) {
       if (res.ok) {
         setOrder(res.order);
         setProduct(res.product);
+        setProducts(res.products || (res.product ? [res.product] : []));
         setState({ phase: "ok" });
         return;
       }
@@ -67,7 +69,7 @@ export default function ThanksClient({ orderId }) {
   }
 
   if (state.phase === "ok") {
-    return <SuccessView order={order} product={product} />;
+    return <SuccessView order={order} product={product} products={products} />;
   }
 
   if (state.phase === "wrong_session") {
@@ -151,7 +153,7 @@ export default function ThanksClient({ orderId }) {
   );
 }
 
-function SuccessView({ order, product }) {
+function SuccessView({ order, product, products = [] }) {
   // Status branches the celebration tone (Codex brainstorm B):
   // - captured: full celebration
   // - oversold: clear "two hands reached" message, refund being processed
@@ -160,6 +162,7 @@ function SuccessView({ order, product }) {
   const captured = status === "captured";
   const oversold = status === "oversold";
   const refunded = status === "refunded";
+  const isBundle = products.length > 1;
 
   const total = (order.amount_cents / 100).toFixed(2);
   const dateStr = order.captured_at
@@ -174,8 +177,10 @@ function SuccessView({ order, product }) {
   let titleLine;
   let leadBlurb;
   if (captured) {
-    titleLine = "She has chosen you.";
-    leadBlurb = "Thank you — your relic is on her way to her new person.";
+    titleLine = isBundle ? "They have chosen you." : "She has chosen you.";
+    leadBlurb = isBundle
+      ? `Thank you — your ${products.length} relics are on their way to their new person.`
+      : "Thank you — your relic is on her way to her new person.";
   } else if (oversold) {
     titleLine = "So sorry — two hands at the same moment.";
     leadBlurb =
@@ -197,44 +202,58 @@ function SuccessView({ order, product }) {
         {leadBlurb}
       </p>
 
-      {/* Relic + summary card */}
-      <div className="grid sm:grid-cols-[160px_1fr] gap-5 items-start bg-forest/40 border border-parchment/15 rounded-md p-5 mb-10">
-        <div className="relative aspect-square w-full sm:w-40 bg-ink/40 rounded-sm overflow-hidden">
-          {product?.image && (
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              sizes="160px"
-              className="object-cover"
-              placeholder="blur"
-              blurDataURL={BLUR_DATA_URL}
-            />
-          )}
-        </div>
-        <div>
-          <p className="font-chancery text-3xl mb-1">
-            {product?.name || order.product_id}
+      {/* Relic(s) + summary card */}
+      {isBundle ? (
+        <div className="bg-forest/40 border border-parchment/15 rounded-md p-5 mb-10">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-brass-light mb-4">
+            Your {products.length} pieces
           </p>
-          <p
-            className={`text-2xl font-chancery mb-3 ${
-              refunded ? "text-cream-dim" : oversold ? "text-yellow-200" : "text-labradorite-glow"
-            }`}
-          >
-            ${total} <span className="text-xs text-cream-dim/70">{order.currency}</span>
-            {refunded && (
-              <span className="ml-2 text-[11px] uppercase tracking-[0.18em] text-rose-300">
-                refunded
-              </span>
-            )}
-            {oversold && (
-              <span className="ml-2 text-[11px] uppercase tracking-[0.18em] text-yellow-200">
-                refunding
-              </span>
-            )}
-          </p>
+          <ul className="space-y-3 mb-5">
+            {products.map((p) => (
+              <li key={p.id} className="flex items-center gap-3">
+                <div className="relative w-14 h-14 shrink-0 bg-ink/40 rounded-sm overflow-hidden">
+                  {p.image && (
+                    <Image
+                      src={p.image}
+                      alt={p.name}
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
+                    />
+                  )}
+                </div>
+                <p className="font-chancery text-xl leading-tight">{p.name}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="hairline mb-4" />
+          <div className="flex items-baseline justify-between">
+            <span className="text-[11px] uppercase tracking-[0.18em] text-cream-dim">
+              Total paid
+            </span>
+            <p
+              className={`font-chancery text-3xl ${
+                refunded ? "text-cream-dim" : oversold ? "text-yellow-200" : "text-labradorite-glow"
+              }`}
+            >
+              ${total}{" "}
+              <span className="text-xs text-cream-dim/70">{order.currency}</span>
+              {refunded && (
+                <span className="ml-2 text-[11px] uppercase tracking-[0.18em] text-rose-300">
+                  refunded
+                </span>
+              )}
+              {oversold && (
+                <span className="ml-2 text-[11px] uppercase tracking-[0.18em] text-yellow-200">
+                  refunding
+                </span>
+              )}
+            </p>
+          </div>
           {dateStr && (
-            <p className="text-cream-dim text-xs italic">{dateStr}</p>
+            <p className="text-cream-dim text-xs italic mt-2">{dateStr}</p>
           )}
           {order.buyer_name && (
             <p className="text-cream-dim text-sm mt-1">
@@ -243,7 +262,54 @@ function SuccessView({ order, product }) {
             </p>
           )}
         </div>
-      </div>
+      ) : (
+        <div className="grid sm:grid-cols-[160px_1fr] gap-5 items-start bg-forest/40 border border-parchment/15 rounded-md p-5 mb-10">
+          <div className="relative aspect-square w-full sm:w-40 bg-ink/40 rounded-sm overflow-hidden">
+            {product?.image && (
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                sizes="160px"
+                className="object-cover"
+                placeholder="blur"
+                blurDataURL={BLUR_DATA_URL}
+              />
+            )}
+          </div>
+          <div>
+            <p className="font-chancery text-3xl mb-1">
+              {product?.name || order.product_id}
+            </p>
+            <p
+              className={`text-2xl font-chancery mb-3 ${
+                refunded ? "text-cream-dim" : oversold ? "text-yellow-200" : "text-labradorite-glow"
+              }`}
+            >
+              ${total} <span className="text-xs text-cream-dim/70">{order.currency}</span>
+              {refunded && (
+                <span className="ml-2 text-[11px] uppercase tracking-[0.18em] text-rose-300">
+                  refunded
+                </span>
+              )}
+              {oversold && (
+                <span className="ml-2 text-[11px] uppercase tracking-[0.18em] text-yellow-200">
+                  refunding
+                </span>
+              )}
+            </p>
+            {dateStr && (
+              <p className="text-cream-dim text-xs italic">{dateStr}</p>
+            )}
+            {order.buyer_name && (
+              <p className="text-cream-dim text-sm mt-1">
+                {order.buyer_name}
+                {order.buyer_email && <> · {order.buyer_email}</>}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Shipping address */}
       {captured && shipping && (
@@ -279,8 +345,9 @@ function SuccessView({ order, product }) {
             <li className="flex gap-3">
               <span className="text-labradorite-light shrink-0">·</span>
               <span>
-                I&apos;ll wrap her by hand over the next 24 hours, You&apos;ll get a follow-up email from me when she ships with
-                tracking details.
+                {isBundle
+                  ? "I'll wrap all of them by hand over the next 24 hours. You'll get a follow-up email from me when they ship with tracking details."
+                  : "I'll wrap her by hand over the next 24 hours. You'll get a follow-up email from me when she ships with tracking details."}
               </span>
             </li>
           </ul>

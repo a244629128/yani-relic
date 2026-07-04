@@ -2,6 +2,8 @@ import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import SiteBanner from "@/components/SiteBanner";
 import MobileActionBar from "@/components/MobileActionBar";
+import FloatingChatButton from "@/components/FloatingChatButton";
+import SelectionBar from "@/components/SelectionBar";
 import BackToTop from "@/components/BackToTop";
 import CursorSparkleTrail from "@/components/decor/CursorSparkleTrail";
 import TapBurstSparkles from "@/components/decor/TapBurstSparkles";
@@ -48,6 +50,8 @@ export default function RootLayout({ children }) {
         <SiteBanner />
         {children}
         <MobileActionBar />
+        <SelectionBar />
+        <FloatingChatButton />
         <BackToTop />
         <CursorSparkleTrail />
         <TapBurstSparkles />

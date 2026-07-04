@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import { paypalRequest } from "@/lib/paypal";
 import { createAdminSupabase } from "@/lib/supabase";
 import { markProductSold } from "@/lib/products-db";
+import { revalidatePath } from "next/cache";
 
 export const runtime = "nodejs";
 
@@ -113,9 +114,15 @@ export async function POST(req) {
 
   const { data: existing } = await sb
     .from("paypal_orders")
-    .select("status, captured_at, capture_id, product_id")
+    .select("status, captured_at, capture_id, product_id, sold_marked")
     .eq("id", orderId)
     .maybeSingle();
+
+  // Bundle marker: paypal_orders.product_id IS NULL means this row was
+  // created via the bundle-checkout flow. Bundles need special handling
+  // because markProductSold applies to a single product; a bundle
+  // capture requires an atomic all-or-none flip across all line items.
+  const isBundle = existing ? existing.product_id === null : false;
 
   // Decide whether to update the status field. We keep status monotonic so
   // a stale event can't downgrade a row past its final state. Capture
@@ -165,6 +172,23 @@ export async function POST(req) {
     updates.captured_at = new Date().toISOString();
   }
 
+  // Codex BLOCKER: bundle rows require the same atomic all-or-none products
+  // flip that capturePayPalBundleOrder does synchronously — the webhook
+  // must NOT just set status='captured' without flipping inventory, or
+  // admin sees a "captured" bundle with unsold products (inventory limbo).
+  //
+  // Idempotency: if sold_marked is already true, the sync capture path
+  // has already run; we only need to make sure raw_payload / capture_id
+  // land here without touching products or triggering a spurious oversell.
+  if (isBundle && updates.status === "captured" && !existing?.sold_marked) {
+    return await handleBundleWebhookCapture({
+      sb,
+      orderId,
+      updates,
+      capturePayload: event,
+    });
+  }
+
   const { error: updateErr } = await sb
     .from("paypal_orders")
     .update(updates)
@@ -176,7 +200,11 @@ export async function POST(req) {
     // helper with WHERE sold=false guard, so a second invocation no-ops.
     // The webhook is the durability backstop in case the synchronous
     // capture's auto-mark call ran into transient error.
-    if (updates.status === "captured") {
+    //
+    // Bundle rows skip this — bundles were handled above (or the sync
+    // capture already ran; in either case markProductSold with a NULL
+    // product_id would silently no-op).
+    if (updates.status === "captured" && !isBundle) {
       const productId = existing?.product_id || extractProductIdFromEvent(event);
       if (productId) {
         try {
@@ -229,6 +257,143 @@ export async function POST(req) {
   console.error("[paypal-webhook] update failed:", updateErr);
   // 500 → PayPal will retry. That's what we want for transient DB failure.
   return new NextResponse(null, { status: 500 });
+}
+
+/**
+ * Bundle-specific capture path from the webhook. Mirrors the atomic
+ * all-or-none logic in capturePayPalBundleOrder (lib/paypal-actions.js):
+ *   1. Fetch the bundle's line items.
+ *   2. Atomic flip products SET sold=true WHERE id IN (items) AND sold=false.
+ *   3. If all flipped → persist captured status + sold_marked=true.
+ *   4. If not all flipped → refund PayPal + mark oversold (or refunded
+ *      if PayPal accepted the refund), roll back the products we flipped.
+ *
+ * Called from POST handler above when the webhook says a bundle became
+ * captured AND the sync path hasn't already recorded sold_marked (an
+ * idempotency guard for redelivered webhooks).
+ */
+async function handleBundleWebhookCapture({ sb, orderId, updates, capturePayload }) {
+  const { data: itemRows, error: itemsErr } = await sb
+    .from("paypal_order_items")
+    .select("product_id")
+    .eq("order_id", orderId);
+  if (itemsErr || !itemRows || itemRows.length === 0) {
+    console.error(
+      "[paypal-webhook] bundle capture: items lookup failed for", orderId, itemsErr
+    );
+    // 500 → PayPal retries. If items are truly missing this will keep
+    // failing, but that's a data corruption issue that needs admin.
+    return new NextResponse(null, { status: 500 });
+  }
+  const bundleProductIds = itemRows.map((r) => r.product_id);
+
+  // Atomic all-or-none flip.
+  const { data: flipped, error: flipErr } = await sb
+    .from("products")
+    .update({ sold: true })
+    .in("id", bundleProductIds)
+    .eq("sold", false)
+    .select("id");
+  const flippedCount = flipped?.length || 0;
+  const allFlipped = !flipErr && flippedCount === bundleProductIds.length;
+
+  if (allFlipped) {
+    const { data: capturedRow, error: updateErr } = await sb
+      .from("paypal_orders")
+      .update(updates)
+      .eq("id", orderId)
+      .in("status", ["created", "approved"])
+      .select("id");
+
+    if (updateErr || (capturedRow?.length || 0) === 0) {
+      console.error(
+        "[paypal-webhook] bundle capture: could not persist captured status after flip. Rolling back products.",
+        updateErr || "row already in terminal status"
+      );
+      await sb
+        .from("products")
+        .update({ sold: false })
+        .in("id", bundleProductIds)
+        .eq("sold", true);
+      // 500 → PayPal retries. That's what we want for transient DB failure.
+      return new NextResponse(null, { status: 500 });
+    }
+
+    try {
+      for (const id of bundleProductIds) revalidatePath(`/shop/${id}`);
+      revalidatePath("/");
+      revalidatePath("/shop");
+      revalidatePath("/admin/orders");
+    } catch (err) {
+      console.error("[paypal-webhook] bundle capture revalidate error:", err);
+    }
+    return new NextResponse(null, { status: 204 });
+  }
+
+  // Oversell: some items were already sold by another flow before we got
+  // here. Roll back the ones we DID just flip, then attempt a PayPal
+  // refund. If refund succeeds → mark 'refunded'; if not → 'oversold' for
+  // manual admin action.
+  console.warn(
+    `[paypal-webhook] OVERSOLD bundle ${orderId}: flipped ${flippedCount}/${bundleProductIds.length}. Attempting refund.`
+  );
+  const flippedIds = new Set((flipped || []).map((r) => r.id));
+  if (flippedIds.size > 0) {
+    await sb
+      .from("products")
+      .update({ sold: false })
+      .in("id", Array.from(flippedIds));
+  }
+
+  // Extract capture_id from the webhook payload — needed for the refund API.
+  const resource = capturePayload?.resource || {};
+  let refundCaptureId = null;
+  if (capturePayload?.event_type?.startsWith("PAYMENT.CAPTURE.")) {
+    refundCaptureId = resource.id || null;
+  } else if (capturePayload?.event_type?.startsWith("CHECKOUT.ORDER.")) {
+    refundCaptureId = resource.purchase_units?.[0]?.payments?.captures?.[0]?.id || null;
+  }
+
+  let refundOk = false;
+  if (refundCaptureId) {
+    try {
+      await paypalRequest(
+        `/v2/payments/captures/${encodeURIComponent(refundCaptureId)}/refund`,
+        { method: "POST", body: {} }
+      );
+      refundOk = true;
+    } catch (refundErr) {
+      console.error(
+        "[paypal-webhook] bundle oversold refund failed:", refundErr?.message
+      );
+    }
+  }
+
+  const oversoldUpdates = {
+    ...updates,
+    status: refundOk ? "refunded" : "oversold",
+    sold_marked: false,
+  };
+  const { error: markErr } = await sb
+    .from("paypal_orders")
+    .update(oversoldUpdates)
+    .eq("id", orderId)
+    .in("status", ["created", "approved"]);
+
+  if (markErr) {
+    console.error(
+      "[paypal-webhook] CRITICAL: bundle oversold-mark failed:", markErr
+    );
+    // 500 → PayPal will retry. That's what we want for transient DB failure.
+    return new NextResponse(null, { status: 500 });
+  }
+
+  try {
+    revalidatePath("/admin/orders");
+  } catch (err) {
+    console.error("[paypal-webhook] bundle oversold revalidate error:", err);
+  }
+  return new NextResponse(null, { status: 204 });
 }
 
 // Fallback for the rare case where our paypal_orders row is missing

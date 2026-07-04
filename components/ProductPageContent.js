@@ -4,7 +4,8 @@ import WaxSeal from "@/components/decor/WaxSeal";
 import ProductGallery from "@/components/ProductGallery";
 import PayPalCheckoutButton from "@/components/PayPalCheckoutButton";
 import FormattedDescription from "@/components/FormattedDescription";
-import { links } from "@/data/products";
+import AddToOrderCheckbox from "@/components/AddToOrderCheckbox";
+import { links, SHIPPING_FEE_USD, calculateShipping } from "@/data/products";
 import { trackDepopClick } from "@/lib/analytics";
 
 /**
@@ -15,6 +16,15 @@ import { trackDepopClick } from "@/lib/analytics";
  * as the secondary buying path (red brand button, see below).
  */
 export default function ProductPageContent({ product, paypalClientId }) {
+  // Effective price (sale price if on-sale, else list price) — matches
+  // the value we charge at PayPal, and the base for the shipping total.
+  const effectivePrice = Number(
+    product.onSale && product.salePrice ? product.salePrice : product.price
+  );
+  const shippingFee = calculateShipping(effectivePrice);
+  const freeShipping = shippingFee === 0;
+  const totalWithShipping = (effectivePrice + shippingFee).toFixed(2);
+
   return (
     <article className="mx-auto max-w-6xl px-3 sm:px-5 lg:px-8 pt-4 pb-32 md:pb-16">
       <div className="grid md:grid-cols-2 gap-6 md:gap-10 lg:gap-14">
@@ -64,7 +74,7 @@ export default function ProductPageContent({ product, paypalClientId }) {
             </div>
           </dl>
 
-          <div className="flex items-baseline gap-3 flex-wrap mb-6">
+          <div className="flex items-baseline gap-3 flex-wrap mb-2">
             {product.onSale && !product.sold ? (
               <>
                 <span className="font-chancery text-5xl text-rose-400">
@@ -89,6 +99,19 @@ export default function ProductPageContent({ product, paypalClientId }) {
               </>
             )}
           </div>
+          {/* Shipping disclosure — hidden on sold pieces since they can't be
+              purchased. Flips to "Free shipping" when the piece hits the
+              free-shipping threshold. */}
+          {!product.sold && (
+            <p className="font-serif italic text-cream-dim/75 text-sm mb-6">
+              {freeShipping ? (
+                <span className="text-labradorite-light not-italic">✦ Free shipping</span>
+              ) : (
+                <>+ ${SHIPPING_FEE_USD} shipping</>
+              )}{" "}
+              · US only
+            </p>
+          )}
 
           {/* Buy CTAs — PayPal primary, Shop on Depop secondary. */}
           {product.sold ? (
@@ -104,9 +127,24 @@ export default function ProductPageContent({ product, paypalClientId }) {
                   // sticky header / banner on scroll.
                   className="relative z-0 isolate mb-3"
                 >
+                  <p className="text-cream-dim/75 text-xs text-center mb-2 font-serif italic">
+                    You&apos;ll be charged ${totalWithShipping} ({freeShipping
+                      ? "shipping included"
+                      : `$${effectivePrice.toFixed(2)} + $${SHIPPING_FEE_USD} shipping`})
+                  </p>
                   <PayPalCheckoutButton product={product} clientId={paypalClientId} />
                 </div>
               )}
+              {/* Bundle-checkout entry point. Text link (variant="link")
+                  keeps the primary PayPal CTA visually dominant. Hidden on
+                  sold pieces by the component itself. */}
+              <div className="text-center mb-3">
+                <AddToOrderCheckbox
+                  productId={product.id}
+                  sold={product.sold}
+                  variant="link"
+                />
+              </div>
               <a
                 href={product.depopUrl || links.depop}
                 target="_blank"

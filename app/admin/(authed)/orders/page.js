@@ -87,8 +87,15 @@ export default async function AdminOrdersPage() {
             // legacy tracking — we branch the button purely on productSold.
             const isOversold = o.status === "oversold";
             const isCaptured = o.status === "captured";
-            const showMarkSold = isCaptured && o.productSold === false;
-            const showMarkUnsold = isCaptured && o.productSold === true;
+            // Manual mark-sold/unsold buttons apply to single-item orders
+            // only. Bundle orders flip all pieces atomically at capture
+            // (see capturePayPalBundleOrder). If reconciliation is ever
+            // needed for a bundle, admin does it product-by-product via
+            // the /admin/<productId> edit pages.
+            const showMarkSold =
+              !o.isBundle && isCaptured && o.productSold === false;
+            const showMarkUnsold =
+              !o.isBundle && isCaptured && o.productSold === true;
             return (
               <li
                 key={o.id}
@@ -108,6 +115,11 @@ export default async function AdminOrdersPage() {
                       >
                         {o.status}
                       </span>
+                      {o.isBundle && (
+                        <span className="text-[10px] uppercase tracking-[0.18em] px-2 py-0.5 rounded-full border border-brass/50 text-brass-light bg-brass/10">
+                          Bundle
+                        </span>
+                      )}
                       {o.sold_marked && (
                         <span className="text-[10px] uppercase tracking-[0.18em] text-labradorite-light/80">
                           ✓ Sold marked
@@ -118,13 +130,42 @@ export default async function AdminOrdersPage() {
                       </span>
                     </div>
                     <p className="text-cream font-chancery text-2xl mb-1">
-                      <Link href={`/admin/${o.product_id}`} className="hover:text-labradorite-light transition-colors">
-                        {o.productName}
-                      </Link>{" "}
+                      {o.isBundle ? (
+                        <span>{o.productName}</span>
+                      ) : (
+                        <Link
+                          href={`/admin/${o.product_id}`}
+                          className="hover:text-labradorite-light transition-colors"
+                        >
+                          {o.productName}
+                        </Link>
+                      )}
                       <span className="text-labradorite-glow text-xl">
-                        — {formatAmount(o.amount_cents, o.currency)}
+                        {" "}— {formatAmount(o.amount_cents, o.currency)}
                       </span>
                     </p>
+                    {o.isBundle && o.items && o.items.length > 0 && (
+                      <ul className="mb-2 pl-3 border-l border-brass/30 space-y-0.5">
+                        {o.items.map((it) => (
+                          <li key={it.productId} className="text-cream/80 text-sm">
+                            <Link
+                              href={`/admin/${it.productId}`}
+                              className="hover:text-labradorite-light transition-colors"
+                            >
+                              {it.productName}
+                            </Link>
+                            <span className="text-cream-dim/60 text-xs ml-2">
+                              {formatAmount(it.priceCents, o.currency)}
+                            </span>
+                            {it.productSold === false && (
+                              <span className="text-yellow-200/80 text-[10px] uppercase tracking-[0.18em] ml-2">
+                                (not marked sold)
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     <p className="text-cream-dim text-xs">
                       {o.buyer_name || "(buyer name pending)"} ·{" "}
                       {o.buyer_email || "(email pending)"}
