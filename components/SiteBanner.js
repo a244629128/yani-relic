@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 // pointer/touch. Respects prefers-reduced-motion (no auto-rotate; first
 // message stays visible).
 const MESSAGES = [
-  { label: "Free shipping on orders", emphasis: "$50+" },
+  { label: "Free shipping on orders", emphasis: "$99+" },
   { label: "Ships within", emphasis: "24 hours" },
 ];
 

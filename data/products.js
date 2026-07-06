@@ -8,7 +8,7 @@
 // FREE_SHIPPING_THRESHOLD_USD — see calculateShipping() below.
 // US-only — international buyers are asked to message first.
 export const SHIPPING_FEE_USD = 6;
-export const FREE_SHIPPING_THRESHOLD_USD = 50;
+export const FREE_SHIPPING_THRESHOLD_USD = 99;
 
 /**
  * Single source of truth for shipping calculation. Used by:
